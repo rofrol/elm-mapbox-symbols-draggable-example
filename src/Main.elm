@@ -85,7 +85,7 @@ view model =
         [ css
         , div [ style "width" "100vw", style "height" "100vh" ]
             [ map
-                [ maxZoom 5
+                [ maxZoom 24
                 , onMouseMove Hover
                 , onClick Click
                 , id "my-map"
@@ -127,7 +127,7 @@ view model =
                             "composite"
                             [ Layer.sourceLayer "place_label"
                             , Layer.minzoom 1
-                            , Layer.maxzoom 14
+                            , Layer.maxzoom 24
                             , Layer.filter <|
                                 E.all
                                     [ E.getProperty (str "scalerank") |> E.greaterThan (int 2)
