@@ -344,7 +344,7 @@ view model =
     }
 
 
-style2 =
+style =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
@@ -359,79 +359,52 @@ style2 =
             , Style.sprite "mapbox://sprites/mapbox/light-v10"
             , Style.glyphs "mapbox://fonts/mapbox/{fontstack}/{range}.pbf"
             ]
-        , layers =
-            [ Layer.background "background"
-                [ E.rgba 246 246 244 1 |> Layer.backgroundColor
-                ]
-            , Layer.fill "landcover"
-                "composite"
-                [ Layer.sourceLayer "landcover"
-                , E.any
-                    [ E.getProperty (str "class") |> E.isEqual (str "wood")
-                    , E.getProperty (str "class") |> E.isEqual (str "scrub")
-                    , E.getProperty (str "class") |> E.isEqual (str "grass")
-                    , E.getProperty (str "class") |> E.isEqual (str "crop")
-                    ]
-                    |> Layer.filter
-                , Layer.fillColor (E.rgba 227 227 227 1)
-                , Layer.fillOpacity (float 0.6)
-                ]
-            , Layer.symbol "place-city-lg-n"
-                "composite"
-                [ Layer.sourceLayer "place_label"
-                , Layer.minzoom 1
-                , Layer.maxzoom 24
-                , Layer.filter <|
-                    E.all
-                        [ E.getProperty (str "scalerank") |> E.greaterThan (int 2)
-                        , E.getProperty (str "type") |> E.isEqual (str "city")
-                        ]
-                , Layer.textField <|
-                    E.format
-                        [ E.getProperty (str "name_en")
-                            |> E.formatted
-                            |> E.fontScaledBy (float 1.2)
-                        , E.formatted (str "\n")
-                        , E.getProperty (str "name")
-                            |> E.formatted
-                            |> E.fontScaledBy (float 0.8)
-                            |> E.withFont (E.strings [ "DIN Offc Pro Medium" ])
-                        ]
-                ]
-            , Layer.fill "changes"
-                "changes"
-                [ Layer.fillOpacity (E.ifElse (E.toBool (E.featureState (str "hover"))) (float 0.9) (float 0.1))
-                ]
-            ]
-        }
-
-
-style : Style
-style =
-    Style
-        { transition = Style.defaultTransition
-        , light = Style.defaultLight
-        , layers = []
-        , sources = [ Source.vectorFromUrl "composite" "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2" ]
-        , misc = []
+        , layers = layers
         }
 
 
 layers =
-    [ Layer.background "land" [ Layer.backgroundColor (E.rgba 245 245 243 1) ]
+    [ Layer.background "background"
+        [ E.rgba 246 246 244 1 |> Layer.backgroundColor
+        ]
     , Layer.fill "landcover"
         "composite"
         [ Layer.sourceLayer "landcover"
-        , Layer.maxzoom 7
-        , Layer.fillColor (E.rgba 226 226 226 1)
-        , Layer.fillOpacity
-            (E.zoom
-                |> E.interpolate (E.Exponential 1.5)
-                    [ ( 2, float 0.1 )
-                    , ( 7, float 0 )
-                    ]
-            )
-        , Layer.fillAntialias false
+        , E.any
+            [ E.getProperty (str "class") |> E.isEqual (str "wood")
+            , E.getProperty (str "class") |> E.isEqual (str "scrub")
+            , E.getProperty (str "class") |> E.isEqual (str "grass")
+            , E.getProperty (str "class") |> E.isEqual (str "crop")
+            ]
+            |> Layer.filter
+        , Layer.fillColor (E.rgba 227 227 227 1)
+        , Layer.fillOpacity (float 0.6)
+        ]
+    , Layer.symbol "place-city-lg-n"
+        "composite"
+        [ Layer.sourceLayer "place_label"
+        , Layer.minzoom 1
+        , Layer.maxzoom 24
+        , Layer.filter <|
+            E.all
+                [ E.getProperty (str "scalerank") |> E.greaterThan (int 2)
+                , E.getProperty (str "type") |> E.isEqual (str "city")
+                ]
+        , Layer.textField <|
+            E.format
+                [ E.getProperty (str "name_en")
+                    |> E.formatted
+                    |> E.fontScaledBy (float 1.2)
+                , E.formatted (str "\n")
+                , E.getProperty (str "name")
+                    |> E.formatted
+                    |> E.fontScaledBy (float 0.8)
+                    |> E.withFont (E.strings [ "DIN Offc Pro Medium" ])
+                ]
+        ]
+    , Layer.fill "changes"
+        "changes"
+        [ Layer.fillOpacity (E.ifElse (E.toBool (E.featureState (str "hover"))) (float 0.9) (float 0.1))
         ]
     , Layer.fill "national-park"
         "composite"
@@ -485,6 +458,95 @@ layers =
             )
         , Layer.fillColor (E.rgba 181 190 190 1)
         ]
+    , Layer.fill "water"
+        "composite"
+        [ Layer.sourceLayer "water"
+        , Layer.fillColor (E.rgba 202 210 210 1)
+        ]
+    , Layer.fill "hillshade"
+        "composite"
+        [ Layer.sourceLayer "hillshade"
+        , Layer.maxzoom 16
+        , Layer.fillColor (E.getProperty (str "class") |> E.matchesStr [ ( "shadow", E.rgba 89 89 89 1 ) ] (E.rgba 255 255 255 1))
+        , Layer.fillOpacity
+            (E.zoom
+                |> E.interpolate E.Linear
+                    [ --( 14, Debug.todo "The expression [" match ",[" get "," level "],[67,56],0.06,[89,78],0.03,0.04] is not yet supported" )
+                      --,
+                      ( 16, float 0 )
+                    ]
+            )
+        , Layer.fillAntialias false
+        ]
+    , Layer.fill "land-structure-polygon"
+        "composite"
+        [ Layer.sourceLayer "structure"
+        , Layer.minzoom 13
+
+        --, Layer.filter (E.all (E.geometryType |> E.isEqual (str "Polygon")) (E.getProperty (str "class") |> E.isEqual (str "land")))
+        , Layer.fillColor (E.rgba 239 244 242 1)
+        ]
+    , Layer.line "land-structure-line"
+        "composite"
+        [ Layer.sourceLayer "structure"
+        , Layer.minzoom 13
+
+        --, Layer.filter (E.all (E.geometryType |> E.isEqual (str "LineString")) (E.getProperty (str "class") |> E.isEqual (str "land")))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.99)
+                    [ ( 14, float 0.75 )
+                    , ( 20, float 40 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 239 244 242 1)
+        , Layer.lineCap E.lineCapRound
+        ]
+    , Layer.fill "aeroway-polygon"
+        "composite"
+        [ Layer.sourceLayer "aeroway"
+        , Layer.minzoom 11
+
+        --, (Layer.filter ((E.all ((((E.geometryType)) |> (E.isEqual ((str "Polygon"))))) (((Debug.todo "The expression ["match",["get","type"],["runway","taxiway","helipad"],true,false] is not yet supported"))))))
+        , Layer.fillOpacity
+            (E.zoom
+                |> E.interpolate E.Linear
+                    [ ( 11, float 0 )
+                    , ( 11.5, float 1 )
+                    ]
+            )
+        , Layer.fillColor (E.rgba 247 247 247 1)
+        ]
+    ]
+
+
+style2 : Style
+style2 =
+    Style
+        { transition = Style.defaultTransition
+        , light = Style.defaultLight
+        , layers = layers
+        , sources = [ Source.vectorFromUrl "composite" "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2" ]
+        , misc = []
+        }
+
+
+layers2 =
+    [ Layer.background "land" [ Layer.backgroundColor (E.rgba 245 245 243 1) ]
+    , Layer.fill "landcover"
+        "composite"
+        [ Layer.sourceLayer "landcover"
+        , Layer.maxzoom 7
+        , Layer.fillColor (E.rgba 226 226 226 1)
+        , Layer.fillOpacity
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 2, float 0.1 )
+                    , ( 7, float 0 )
+                    ]
+            )
+        , Layer.fillAntialias false
+        ]
     , Layer.line "waterway"
         "composite"
         [ Layer.sourceLayer "waterway"
@@ -508,26 +570,6 @@ layers =
 
         --, Layer.lineJoin E.lineCapRound
         ]
-    , Layer.fill "water"
-        "composite"
-        [ Layer.sourceLayer "water"
-        , Layer.fillColor (E.rgba 202 210 210 1)
-        ]
-    , Layer.fill "hillshade"
-        "composite"
-        [ Layer.sourceLayer "hillshade"
-        , Layer.maxzoom 16
-        , Layer.fillColor (E.getProperty (str "class") |> E.matchesStr [ ( "shadow", E.rgba 89 89 89 1 ) ] (E.rgba 255 255 255 1))
-        , Layer.fillOpacity
-            (E.zoom
-                |> E.interpolate E.Linear
-                    [ --( 14, Debug.todo "The expression [" match ",[" get "," level "],[67,56],0.06,[89,78],0.03,0.04] is not yet supported" )
-                      --,
-                      ( 16, float 0 )
-                    ]
-            )
-        , Layer.fillAntialias false
-        ]
     ]
 
 
@@ -535,23 +577,6 @@ layers =
 {-
       layers =
                   [
-          , (Layer.fill "land-structure-polygon" "composite" [(Layer.sourceLayer "structure")
-          , (Layer.minzoom 13)
-          , (Layer.filter ((E.all ((((E.geometryType)) |> (E.isEqual ((str "Polygon"))))) ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "land"))))))))
-          , (Layer.fillColor ((E.rgba 239 244 242 1)))])
-          , (Layer.line "land-structure-line" "composite" [(Layer.sourceLayer "structure")
-          , (Layer.minzoom 13)
-          , (Layer.filter ((E.all ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))) ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "land"))))))))
-          , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.99)) [(14, ((float 0.75)))
-          , (20, ((float 40)))]))))
-          , (Layer.lineColor ((E.rgba 239 244 242 1)))
-          , (Layer.lineCap (E.lineCapRound))])
-          , (Layer.fill "aeroway-polygon" "composite" [(Layer.sourceLayer "aeroway")
-          , (Layer.minzoom 11)
-          , (Layer.filter ((E.all ((((E.geometryType)) |> (E.isEqual ((str "Polygon"))))) (((Debug.todo "The expression ["match",["get","type"],["runway","taxiway","helipad"],true,false] is not yet supported"))))))
-          , (Layer.fillOpacity ((((E.zoom)) |> (E.interpolate ((E.Linear)) [(11, ((float 0)))
-          , (11.5, ((float 1)))]))))
-          , (Layer.fillColor ((E.rgba 247 247 247 1)))])
           , (Layer.line "aeroway-line" "composite" [(Layer.sourceLayer "aeroway")
           , (Layer.minzoom 9)
           , (Layer.filter ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))
