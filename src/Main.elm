@@ -447,6 +447,87 @@ layers =
                     ]
             )
         ]
+    , Layer.fill "landuse"
+        "composite"
+        [ Layer.sourceLayer "landuse"
+        , Layer.minzoom 5
+
+        -- , Layer.filter (Debug.todo "The expression [" match ",[" get "," class "],[" park "," airport "," glacier "," pitch "," sand "],true,false] is not yet supported")
+        , Layer.fillOpacity
+            (E.zoom
+                |> E.interpolate E.Linear
+                    [ ( 5, float 0 )
+                    , ( 6, E.getProperty (str "class") |> E.matchesStr [ ( "glacier", float 0.5 ) ] (float 1) )
+                    ]
+            )
+        , Layer.fillColor (E.rgba 236 238 237 1)
+        ]
+    , Layer.fill "water-shadow"
+        "composite"
+        [ Layer.sourceLayer "water"
+        , Layer.fillTranslateAnchor E.anchorViewport
+        , Layer.fillTranslate
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.2)
+                    [ ( 7
+                      , E.floats
+                            [ 0
+                            , 0
+                            ]
+                      )
+                    , ( 16
+                      , E.floats
+                            [ -1
+                            , -1
+                            ]
+                      )
+                    ]
+            )
+        , Layer.fillColor (E.rgba 181 190 190 1)
+        ]
+    , Layer.line "waterway"
+        "composite"
+        [ Layer.sourceLayer "waterway"
+        , Layer.minzoom 8
+        , Layer.lineColor (E.rgba 202 209 210 1)
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.3)
+                    [--( 9, Debug.todo "The expression [" match ",[" get "," class "],[" canal "," river "],0.1,0] is not yet supported" )
+                     --, ( 20, Debug.todo "The expression [" match ",[" get "," class "],[" canal "," river "],8,3] is not yet supported" )
+                    ]
+            )
+        , Layer.lineOpacity
+            (E.zoom
+                |> E.interpolate E.Linear
+                    [ ( 8, float 0 )
+                    , ( 8.5, float 1 )
+                    ]
+            )
+        , Layer.lineCap (E.zoom |> E.step E.lineCapButt [ ( 11, E.lineCapRound ) ])
+
+        --, Layer.lineJoin E.lineCapRound
+        ]
+    , Layer.fill "water"
+        "composite"
+        [ Layer.sourceLayer "water"
+        , Layer.fillColor (E.rgba 202 210 210 1)
+        ]
+    , Layer.fill "hillshade"
+        "composite"
+        [ Layer.sourceLayer "hillshade"
+        , Layer.maxzoom 16
+        , Layer.fillColor (E.getProperty (str "class") |> E.matchesStr [ ( "shadow", E.rgba 89 89 89 1 ) ] (E.rgba 255 255 255 1))
+        , Layer.fillOpacity
+            (E.zoom
+                |> E.interpolate E.Linear
+                    [ --( 14, Debug.todo "The expression [" match ",[" get "," level "],[67,56],0.06,[89,78],0.03,0.04] is not yet supported" )
+                      --,
+                      ( 16, float 0 )
+                    ]
+            )
+        , Layer.fillAntialias false
+        ]
     ]
 
 
@@ -454,36 +535,6 @@ layers =
 {-
       layers =
                   [
-          , (Layer.fill "landuse" "composite" [(Layer.sourceLayer "landuse")
-          , (Layer.minzoom 5)
-          , (Layer.filter (((Debug.todo "The expression ["match",["get","class"],["park","airport","glacier","pitch","sand"],true,false] is not yet supported"))))
-          , (Layer.fillOpacity ((((E.zoom)) |> (E.interpolate ((E.Linear)) [(5, ((float 0)))
-          , (6, ((((E.getProperty ((str "class")))) |> (E.matchesStr [("glacier", ((float 0.5)))] ((float 1))))))]))))
-          , (Layer.fillColor ((E.rgba 236 238 237 1)))])
-          , (Layer.fill "water-shadow" "composite" [(Layer.sourceLayer "water")
-          , (Layer.fillTranslateAnchor (E.anchorViewport))
-          , (Layer.fillTranslate ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.2)) [(7, ((E.floats [0
-          , 0])))
-          , (16, ((E.floats [-1
-          , -1])))]))))
-          , (Layer.fillColor ((E.rgba 181 190 190 1)))])
-          , (Layer.line "waterway" "composite" [(Layer.sourceLayer "waterway")
-          , (Layer.minzoom 8)
-          , (Layer.lineColor ((E.rgba 202 209 210 1)))
-          , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.3)) [(9, (((Debug.todo "The expression ["match",["get","class"],["canal","river"],0.1,0] is not yet supported"))))
-          , (20, (((Debug.todo "The expression ["match",["get","class"],["canal","river"],8,3] is not yet supported"))))]))))
-          , (Layer.lineOpacity ((((E.zoom)) |> (E.interpolate ((E.Linear)) [(8, ((float 0)))
-          , (8.5, ((float 1)))]))))
-          , (Layer.lineCap ((((E.zoom)) |> (E.step (E.lineCapButt) [(11, (E.lineCapRound))]))))
-          , (Layer.lineJoin (E.lineCapRound))])
-          , (Layer.fill "water" "composite" [(Layer.sourceLayer "water")
-          , (Layer.fillColor ((E.rgba 202 210 210 1)))])
-          , (Layer.fill "hillshade" "composite" [(Layer.sourceLayer "hillshade")
-          , (Layer.maxzoom 16)
-          , (Layer.fillColor ((((E.getProperty ((str "class")))) |> (E.matchesStr [("shadow", ((E.rgba 89 89 89 1)))] ((E.rgba 255 255 255 1))))))
-          , (Layer.fillOpacity ((((E.zoom)) |> (E.interpolate ((E.Linear)) [(14, (((Debug.todo "The expression ["match",["get","level"],[67,56],0.06,[89,78],0.03,0.04] is not yet supported"))))
-          , (16, ((float 0)))]))))
-          , (Layer.fillAntialias (false))])
           , (Layer.fill "land-structure-polygon" "composite" [(Layer.sourceLayer "structure")
           , (Layer.minzoom 13)
           , (Layer.filter ((E.all ((((E.geometryType)) |> (E.isEqual ((str "Polygon"))))) ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "land"))))))))
