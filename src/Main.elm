@@ -978,6 +978,89 @@ layers =
 
         --, (Layer.lineJoin (E.lineCapRound))
         ]
+    , Layer.line "road-secondary-tertiary-case"
+        "composite"
+        [ --(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
+          --,
+          Layer.sourceLayer "road"
+
+        --, (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["secondary","tertiary"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 10, float 0.75 )
+                    , ( 18, float 2 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 232 237 235 1)
+        , Layer.lineGapWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 5, float 0.1 )
+                    , ( 18, float 26 )
+                    ]
+            )
+        , Layer.lineCap E.lineCapRound
+
+        --, (Layer.lineJoin (E.lineCapRound))
+        ]
+
+    -- TODO: Roads now looke much worse
+    , Layer.line "road-primary-case"
+        "composite"
+        [ --(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
+          -- ,
+          Layer.sourceLayer "road"
+
+        --, (Layer.filter ((E.all ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "primary"))))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 10, float 1 )
+                    , ( 18, float 2 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 232 237 235 1)
+        , Layer.lineGapWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 5, float 0.75 )
+                    , ( 18, float 32 )
+                    ]
+            )
+        , Layer.lineCap E.lineCapRound
+
+        --, (Layer.lineJoin (E.lineCapRound))
+        ]
+    , Layer.line "road-major-link-case"
+        "composite"
+        [ --(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
+          --,
+          Layer.sourceLayer "road"
+        , Layer.minzoom 10
+
+        --, (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["motorway_link","trunk_link"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 12, float 0.75 )
+                    , ( 20, float 2 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 232 237 235 1)
+        , Layer.lineGapWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 12, float 0.5 )
+                    , ( 14, float 2 )
+                    , ( 18, float 18 )
+                    ]
+            )
+        , Layer.lineOpacity (E.zoom |> E.step (float 0) [ ( 11, float 1 ) ])
+        , Layer.lineCap E.lineCapRound
+
+        --, (Layer.lineJoin (E.lineCapRound))
+        ]
     ]
 
 
@@ -985,39 +1068,6 @@ layers =
 {-
    layers =
                [
-       , (Layer.line "road-secondary-tertiary-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
-       , (Layer.sourceLayer "road")
-       , (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["secondary","tertiary"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
-       , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(10, ((float 0.75)))
-       , (18, ((float 2)))]))))
-       , (Layer.lineColor ((E.rgba 232 237 235 1)))
-       , (Layer.lineGapWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(5, ((float 0.1)))
-       , (18, ((float 26)))]))))
-       , (Layer.lineCap (E.lineCapRound))
-       , (Layer.lineJoin (E.lineCapRound))])
-       , (Layer.line "road-primary-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
-       , (Layer.sourceLayer "road")
-       , (Layer.filter ((E.all ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "primary"))))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
-       , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(10, ((float 1)))
-       , (18, ((float 2)))]))))
-       , (Layer.lineColor ((E.rgba 232 237 235 1)))
-       , (Layer.lineGapWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(5, ((float 0.75)))
-       , (18, ((float 32)))]))))
-       , (Layer.lineCap (E.lineCapRound))
-       , (Layer.lineJoin (E.lineCapRound))])
-       , (Layer.line "road-major-link-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
-       , (Layer.sourceLayer "road")
-       , (Layer.minzoom 10)
-       , (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["motorway_link","trunk_link"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
-       , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(12, ((float 0.75)))
-       , (20, ((float 2)))]))))
-       , (Layer.lineColor ((E.rgba 232 237 235 1)))
-       , (Layer.lineGapWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(12, ((float 0.5)))
-       , (14, ((float 2)))
-       , (18, ((float 18)))]))))
-       , (Layer.lineOpacity ((((E.zoom)) |> (E.step ((float 0)) [(11, ((float 1)))]))))
-       , (Layer.lineCap (E.lineCapRound))
-       , (Layer.lineJoin (E.lineCapRound))])
        , (Layer.line "road-motorway-trunk-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
        , (Layer.sourceLayer "road")
        , (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["motorway","trunk"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
