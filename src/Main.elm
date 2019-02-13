@@ -899,6 +899,56 @@ layers =
 
         --, Layer.lineJoin E.lineCapRound
         ]
+    , Layer.line "road-street-low"
+        "composite"
+        [ --(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
+          -- ,
+          Layer.sourceLayer "road"
+        , Layer.minzoom 11
+
+        --, (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["street","street_limited","primary_link"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 12, float 0.5 )
+                    , ( 14, float 2 )
+                    , ( 18, float 18 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 255 255 255 1)
+        , Layer.lineOpacity (E.zoom |> E.step (float 1) [ ( 14, float 0 ) ])
+        , Layer.lineCap E.lineCapRound
+
+        --, Layer.lineJoin E.lineCapRound
+        ]
+    , Layer.line "road-minor-case"
+        "composite"
+        [ --(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
+          --,
+          Layer.sourceLayer "road"
+        , Layer.minzoom 13
+
+        --, Layer.filter (E.all (E.zoom |> E.step (E.getProperty (str "class") |> E.isEqual (str "track")) [ ( 14, Debug.todo "The expression [" match ",[" get "," class "],[" track "," secondary_link "," tertiary_link "," service "],true,false] is not yet supported" ) ]) (Debug.todo "The expression [" match ",[" get "," structure "],[" none "," ford "],true,false] is not yet supported") (E.geometryType |> E.isEqual (str "LineString")))
+        , Layer.lineWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 12, float 0.75 )
+                    , ( 20, float 2 )
+                    ]
+            )
+        , Layer.lineColor (E.rgba 232 237 235 1)
+        , Layer.lineGapWidth
+            (E.zoom
+                |> E.interpolate (E.Exponential 1.5)
+                    [ ( 14, E.getProperty (str "class") |> E.matchesStr [ ( "track", float 1 ) ] (float 0.5) )
+                    , ( 18, float 12 )
+                    ]
+            )
+        , Layer.lineOpacity (E.zoom |> E.step (float 0) [ ( 14, float 1 ) ])
+        , Layer.lineCap E.lineCapRound
+
+        --, Layer.lineJoin E.lineCapRound
+        ]
     ]
 
 
@@ -906,29 +956,6 @@ layers =
 {-
    layers =
                [
-       , (Layer.line "road-street-low" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
-       , (Layer.sourceLayer "road")
-       , (Layer.minzoom 11)
-       , (Layer.filter ((E.all (((Debug.todo "The expression ["match",["get","class"],["street","street_limited","primary_link"],true,false] is not yet supported"))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
-       , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(12, ((float 0.5)))
-       , (14, ((float 2)))
-       , (18, ((float 18)))]))))
-       , (Layer.lineColor ((E.rgba 255 255 255 1)))
-       , (Layer.lineOpacity ((((E.zoom)) |> (E.step ((float 1)) [(14, ((float 0)))]))))
-       , (Layer.lineCap (E.lineCapRound))
-       , (Layer.lineJoin (E.lineCapRound))])
-       , (Layer.line "road-minor-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
-       , (Layer.sourceLayer "road")
-       , (Layer.minzoom 13)
-       , (Layer.filter ((E.all ((((E.zoom)) |> (E.step ((((E.getProperty ((str "class")))) |> (E.isEqual ((str "track"))))) [(14, (((Debug.todo "The expression ["match",["get","class"],["track","secondary_link","tertiary_link","service"],true,false] is not yet supported"))))]))) (((Debug.todo "The expression ["match",["get","structure"],["none","ford"],true,false] is not yet supported"))) ((((E.geometryType)) |> (E.isEqual ((str "LineString"))))))))
-       , (Layer.lineWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(12, ((float 0.75)))
-       , (20, ((float 2)))]))))
-       , (Layer.lineColor ((E.rgba 232 237 235 1)))
-       , (Layer.lineGapWidth ((((E.zoom)) |> (E.interpolate ((E.Exponential 1.5)) [(14, ((((E.getProperty ((str "class")))) |> (E.matchesStr [("track", ((float 1)))] ((float 0.5))))))
-       , (18, ((float 12)))]))))
-       , (Layer.lineOpacity ((((E.zoom)) |> (E.step ((float 0)) [(14, ((float 1)))]))))
-       , (Layer.lineCap (E.lineCapRound))
-       , (Layer.lineJoin (E.lineCapRound))])
        , (Layer.line "road-street-case" "composite" [(Layer.metadata (((Debug.todo "The expression {"mapbox:group":"1444855786460.0557"} is not yet supported"))))
        , (Layer.sourceLayer "road")
        , (Layer.minzoom 11)
