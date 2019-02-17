@@ -28,14 +28,3 @@ $ serve
 ```
 
 Open http://localhost:5000/.
-
-## Mapbox
-
-get current zoom
-
-```javascript
-document.querySelector('elm-mapbox-map').map.getZoom()
-```
-
-- https://stackoverflow.com/questions/35614957/how-can-i-read-current-zoom-level-of-mapbox
-- https://docs.mapbox.com/mapbox-gl-js/api/#map#getzoom
