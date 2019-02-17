@@ -269,7 +269,6 @@ matchesStr options (Expression default) (Expression input) =
 `encode` extracts json value from expression.
 
 `encodeInterpolation` runs `call` or `call0` depending of interpolation
-
 ## Set style from URI
 
 rofrol [10:47 PM]
@@ -285,3 +284,73 @@ rofrol [11:04 PM]
 gampleman [11:07 PM]
 Ah well that won’t work. There is no way to modify a style - it works like virtual Dom. Which is why the code generator exists. I appreciate that it is a laborious solution at the moment and I hope it will improve in the near future.
 Having the style checked in to your repository is best practice in my experience.
+
+## load style object directly into mapboxStyle property of `elm-mapbox-map` element
+
+I've tried to load style object directly into `document.querySelector('elm-mapbox-map').mapboxStyle`, but as gampleman said, it works like virtual dom. It was overwritten by style from Elm app.
+
+The one way to load was to quickly click on page and hold during reloading side. But then after move move the style from Elm app was loaded.
+
+The way I loaded it was like that:
+
+```html
+	<script src="createObserver.js"></script>
+	<script>
+	    /*
+	    var rootElement = document.getElementById('elm');
+	    createObserver({
+	      rootElement,
+	      selector: 'elm-mapbox-map',
+	      onMount: initAce,
+	      onUnmount: killAce
+	    });
+	    var styleJson;
+            function initAce(node) {
+		let elmMapboxMap = document.querySelector('elm-mapbox-map');
+		elmMapboxMap.map.setStyle('mapbox://styles/mapbox/light-v10');
+	    }
+	    function killAce(node) {
+	    }
+	    */
+	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
+	    var app = Elm.Main.init({ node: document.getElementById("elm") });
+	    elmMapbox.registerPorts(app);
+	</script>
+```
+
+I have also tried it with fetching json previously downloaded:
+
+
+
+```html
+	<script src="createObserver.js"></script>
+	<script>
+	    /*
+	    var rootElement = document.getElementById('elm');
+	    createObserver({
+	      rootElement,
+	      selector: 'elm-mapbox-map',
+	      onMount: initAce,
+	      onUnmount: killAce
+	    });
+	    var styleJson;
+            function initAce(node) {
+		fetch("light-v10.json")
+		  .then(response => response.json())
+		    .then(json => {
+			console.log(json);
+			styleJson = json;
+			let elmMapboxMap = document.querySelector('elm-mapbox-map');
+			elmMapboxMap.mapboxStyle.layers = json.layers;
+		    });
+	    }
+	    function killAce(node) {
+	    }
+	    */
+	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
+	    var app = Elm.Main.init({ node: document.getElementById("elm") });
+	    elmMapbox.registerPorts(app);
+	</script>
+```
+
+createObserver.js and accompanying code was taken from https://gist.github.com/pablen/c07afa6a69291d771699b0e8c91fe547.
