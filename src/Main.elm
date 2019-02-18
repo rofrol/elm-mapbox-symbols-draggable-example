@@ -74,7 +74,7 @@ geojson =
 """ |> Result.withDefault (Json.Encode.object [])
 
 
-geojson2 =
+stores =
     Json.Decode.decodeString Json.Decode.value """
 {
   "type": "FeatureCollection",
@@ -335,7 +335,7 @@ view model =
                 , onMouseMove Hover
                 , onClick Click
                 , id "my-map"
-                , eventFeaturesLayers [ "changes" ]
+                , eventFeaturesLayers [ "locations" ]
                 , hoveredFeatures model.features
                 ]
                 style
@@ -350,8 +350,8 @@ style =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
-        , layers = Styles.Light.style.layers ++ [ changes ]
-        , sources = Styles.Light.style.sources ++ [ Source.geoJSONFromValue "changes" [] geojson2 ]
+        , layers = Styles.Light.style.layers ++ [ locations ]
+        , sources = Styles.Light.style.sources ++ [ Source.geoJSONFromValue "stores" [] stores ]
         , misc =
             Styles.Light.style.misc
                 ++ [ Style.defaultCenter <| LngLat -77.034084 38.909671
@@ -360,8 +360,9 @@ style =
         }
 
 
-changes =
-    Layer.fill "changes"
-        "changes"
-        [ Layer.fillOpacity (E.ifElse (E.toBool (E.featureState (str "hover"))) (float 0.9) (float 0.1))
+locations =
+    Layer.symbol "locations"
+        "stores"
+        [ Layer.iconImage (str "restaurant-15")
+        , Layer.iconAllowOverlap true
         ]
