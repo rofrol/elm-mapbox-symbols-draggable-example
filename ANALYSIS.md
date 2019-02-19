@@ -354,3 +354,13 @@ I have also tried it with fetching json previously downloaded:
 ```
 
 createObserver.js and accompanying code was taken from https://gist.github.com/pablen/c07afa6a69291d771699b0e8c91fe547.
+
+## Error: The feature id parameter must be provided and non-negative
+
+When hovering over restaurant icon from "Build a store locator" tutorial I got error in console.
+
+Needed to add ids to geojson, though example from tutorial does not throws an error.
+
+Maybe because Light style in elm-mapbox is based on mapbox://sprites/mapbox/light-v9 and and the one from tutorial on mapbox://styles/mapbox/light-v10.
+
+Also they tutorial is using mapboxgl 0.53 and I am using probably 0.51.
