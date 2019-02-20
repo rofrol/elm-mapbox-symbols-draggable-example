@@ -1,0 +1,23 @@
+{
+  "name": "mapdid_recrutation",
+  "version": "1.0.0",
+  "description": "## Build a map-based web application",
+  "main": "elm.js",
+  "dependencies": {
+    "elm-mapbox": "^4.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rofrol/mapdid_recrutation.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/rofrol/mapdid_recrutation/issues"
+  },
+  "homepage": "https://github.com/rofrol/mapdid_recrutation#readme"
+}

@@ -427,3 +427,27 @@ We have onMouseOver but not onMouseEnter in elm-mapbox
 - https://github.com/elm/html/issues/166
   - https://github.com/elm/html/issues/167
   - https://javascript.info/mousemove-mouseover-mouseout-mouseenter-mouseleave
+
+## Marker
+
+I am able to add Marker in dev console. After adding 
+
+```html
+<script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
+```
+
+`mapboxgl` is available.
+
+Code to add Marker taken from https://docs.mapbox.com/mapbox-gl-js/example/drag-a-marker/.
+
+```javascript
+var map = document.querySelector('elm-mapbox-map').map;
+  var marker = new mapboxgl.Marker({
+  draggable: true
+})
+.setLngLat([0, 0])
+.addTo(map);
+```
+
+1. How to add this marker after map is loaded?
+2. How to disable draggable?

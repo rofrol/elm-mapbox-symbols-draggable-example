@@ -18,12 +18,13 @@
 		padding: 0;
 	    }
 	</style>
-	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css' rel='stylesheet' />
+	<link href='node_modules/mapbox-gl/dist/mapbox-gl.css' rel='stylesheet' />
     </head>
 
     <body>
 	<div id="elm"></div>
 	<script src="node_modules/elm-mapbox/dist/elm-mapbox.umd.js"></script>
+	<script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
 	<script src="elm.js"></script>
         <script>
 	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
