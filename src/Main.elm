@@ -33,7 +33,7 @@ init () =
     ( { position = LngLat 0 0, features = [], over = False, counter = 0 }, Cmd.none )
 
 
-renderedFeaturesJson =
+renderedFeatureJson =
     """{
   "geometry": {
     "type": "Point",
@@ -67,7 +67,7 @@ type alias RenderedFeature =
     , type_ : String
     , properties : JD.Value
     , id : Int
-    , layer : JD.Value
+    , layer : RenderedFeatureLayer
     , source : String
     , state : JD.Value
     }
@@ -79,9 +79,29 @@ emptyRenderedFeature =
         ""
         (Json.Encode.object [])
         0
-        (Json.Encode.object [])
+        emptyRenderedFeatureLayer
         ""
         (Json.Encode.object [])
+
+
+type alias RenderedFeatureLayer =
+    { id : String
+    , type_ : String
+    , source : String
+    , paint : JD.Value
+    }
+
+
+emptyRenderedFeatureLayer =
+    RenderedFeatureLayer "" "" "" (Json.Encode.object [])
+
+
+decodeRenderedFeatureLayer =
+    JD.succeed RenderedFeatureLayer
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "source" JD.string)
+        |> andMap (JD.field "paint" JD.value)
 
 
 decodeRenderedFeature =
@@ -90,13 +110,13 @@ decodeRenderedFeature =
         |> andMap (JD.field "type" JD.string)
         |> andMap (JD.field "properties" JD.value)
         |> andMap (JD.field "id" JD.int)
-        |> andMap (JD.field "layer" JD.value)
+        |> andMap (JD.field "layer" decodeRenderedFeatureLayer)
         |> andMap (JD.field "source" JD.string)
         |> andMap (JD.field "state" JD.value)
 
 
 decodedRenderedFeature =
-    Result.withDefault emptyRenderedFeature <| JD.decodeString decodeRenderedFeature renderedFeaturesJson
+    Result.withDefault emptyRenderedFeature <| JD.decodeString decodeRenderedFeature renderedFeatureJson
 
 
 type Msg
@@ -114,8 +134,19 @@ update msg model =
 
                 counter =
                     model.counter + 1 |> Debug.log "counter"
+
+                decodedRenderedFeatures =
+                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures |> Debug.log "decodedRenderedFeatures"
+
+                over =
+                    case List.head decodedRenderedFeatures of
+                        Just feature ->
+                            feature.layer.id == "point"
+
+                        Nothing ->
+                            False
             in
-            ( { model | position = lngLat, features = renderedFeatures, counter = counter }, Cmd.none )
+            ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
 
         Click { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures }
@@ -126,7 +157,7 @@ update msg model =
             )
 
         Over { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures, over = True }, Cmd.none )
+            ( { model | position = lngLat, features = renderedFeatures }, Cmd.none )
 
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
