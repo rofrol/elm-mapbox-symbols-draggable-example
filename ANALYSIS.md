@@ -364,3 +364,66 @@ Needed to add ids to geojson, though example from tutorial does not throws an er
 Maybe because Light style in elm-mapbox is based on mapbox://sprites/mapbox/light-v9 and and the one from tutorial on mapbox://styles/mapbox/light-v10.
 
 Also they tutorial is using mapboxgl 0.53 and I am using probably 0.51.
+
+## restaurant-15 icons and names on the map are smaller than in tutorial
+
+- Icons https://github.com/mapbox/mapbox-gl-styles
+
+## Popup
+
+rofrol5:12 PM
+I can't find support for https://docs.mapbox.com/mapbox-gl-js/example/popup/ in elm-mapbox (edited) 
+What do you people use instead?
+gampleman5:16 PM
+Either build it yourself or use ports.
+You can get access to the mapbox instance by using the map property on the custom element
+
+## I will unlock marker by using long press
+
+- http://jsfiddle.net/kelunik/pkjze6e6/42/
+  - https://stackoverflow.com/questions/2625210/long-press-in-javascript/27413909#27413909
+- This does not work on ios firefox but has nice animations https://jsfiddle.net/5xrtx69z/1/
+  - https://stackoverflow.com/questions/2625210/long-press-in-javascript/44459945#44459945
+  - https://github.com/john-doherty/long-press-event
+- https://stackoverflow.com/questions/24774139/how-to-detect-long-press-on-google-maps-markers-javascript
+
+## Draggable point
+
+I've added point on the javascript side and it was removed as soon as I moved mouse cursor over map.
+
+I tried to run javascript on map object to change color of point on hover, but it was visible for very short time, probably after the elm rendering started and replaced map removing all events added in javascript.
+
+When I used `onMouseOver`, it did not contain any data in `renderedFeatures`.
+
+Also when I use `onMouseMove`, I get two events, probably because of bubbling.
+
+I used this to displayed `renderedFeatures`:
+
+```elm
+        Hover { lngLat, renderedFeatures } ->
+            let
+                _ =
+                    List.map (\jsonValue -> Debug.log "renderedFeatures" (Json.Encode.encode 2 jsonValue)) renderedFeatures
+
+                counter =
+                    model.counter + 1 |> Debug.log "counter"
+            in
+            ( { model | position = lngLat, features = renderedFeatures, counter = counter }, Cmd.none )
+```
+
+- https://stackoverflow.com/questions/9387433/onmouseover-running-multiple-times-while-hovering-on-element
+- https://docs.mapbox.com/mapbox-gl-js/example/drag-a-point/
+- https://docs.mapbox.com/mapbox-gl-js/example/drag-a-marker/
+
+We have onMouseOver but not onMouseEnter in elm-mapbox
+
+- https://package.elm-lang.org/packages/elm/html/latest/Html-Events
+- https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/Mapbox-Element#onMouseOver
+
+## Drag and bounce on mobile
+
+- https://github.com/alex3165/react-mapbox-gl/issues/497
+- https://github.com/lazd/iNoBounce
+- https://github.com/elm/html/issues/166
+  - https://github.com/elm/html/issues/167
+  - https://javascript.info/mousemove-mouseover-mouseout-mouseenter-mouseleave
