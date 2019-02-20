@@ -6,7 +6,8 @@ import Browser
 import GeoJSON
 import Html exposing (div, text)
 import Html.Attributes as Attrs
-import Json.Decode
+import Json.Decode as JD
+import Json.Decode.Extra exposing (andMap)
 import Json.Encode
 import LngLat exposing (LngLat)
 import MapCommands
@@ -61,6 +62,43 @@ renderedFeaturesJson =
 """
 
 
+type alias RenderedFeature =
+    { geometry : JD.Value
+    , type_ : String
+    , properties : JD.Value
+    , id : Int
+    , layer : JD.Value
+    , source : String
+    , state : JD.Value
+    }
+
+
+emptyRenderedFeature =
+    RenderedFeature
+        (Json.Encode.object [])
+        ""
+        (Json.Encode.object [])
+        0
+        (Json.Encode.object [])
+        ""
+        (Json.Encode.object [])
+
+
+decodeRenderedFeature =
+    JD.succeed RenderedFeature
+        |> andMap (JD.field "geometry" JD.value)
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "properties" JD.value)
+        |> andMap (JD.field "id" JD.int)
+        |> andMap (JD.field "layer" JD.value)
+        |> andMap (JD.field "source" JD.string)
+        |> andMap (JD.field "state" JD.value)
+
+
+decodedRenderedFeature =
+    Result.withDefault emptyRenderedFeature <| JD.decodeString decodeRenderedFeature renderedFeaturesJson
+
+
 type Msg
     = Hover EventData
     | Click EventData
@@ -80,7 +118,12 @@ update msg model =
             ( { model | position = lngLat, features = renderedFeatures, counter = counter }, Cmd.none )
 
         Click { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures }, MapCommands.fitBounds [ Opt.linear True, Opt.maxZoom 10 ] ( LngLat.map (\a -> a - 0.2) lngLat, LngLat.map (\a -> a + 0.2) lngLat ) )
+            ( { model | position = lngLat, features = renderedFeatures }
+            , MapCommands.fitBounds [ Opt.linear True, Opt.maxZoom 10 ]
+                ( LngLat.map (\a -> a - 0.2) lngLat
+                , LngLat.map (\a -> a + 0.2) lngLat
+                )
+            )
 
         Over { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures, over = True }, Cmd.none )
@@ -97,7 +140,8 @@ view model =
     , body =
         [ css
         , div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
-            [ map
+            [ Html.text <| Debug.toString decodedRenderedFeature
+            , map
                 [ maxZoom 24
                 , onMouseMove Hover
                 , onClick Click
@@ -122,7 +166,7 @@ style over =
         , sources =
             Styles.Light.style.sources
                 ++ [ Source.geoJSONFromValue "stores" [] GeoJSON.stores
-                   , Source.geoJSONFromValue "pointsJson" [] GeoJSON.pointsJson
+                   , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 0 0)
                    ]
         , misc =
             Styles.Light.style.misc

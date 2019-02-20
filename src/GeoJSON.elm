@@ -290,8 +290,8 @@ stores =
 """ |> Result.withDefault (Json.Encode.object [])
 
 
-pointsJson =
-    Json.Decode.decodeString Json.Decode.value """
+pointsJson lng ltd =
+    """
 {
     "type": "FeatureCollection",
     "features": [{
@@ -299,8 +299,14 @@ pointsJson =
         "id": 1,
         "geometry": {
             "type": "Point",
-            "coordinates": [0, 0]
+            "coordinates": ["""
+        ++ String.fromInt lng
+        ++ ","
+        ++ String.fromInt ltd
+        ++ """]
         }
     }]
 }
-""" |> Result.withDefault (Json.Encode.object [])
+"""
+        |> Json.Decode.decodeString Json.Decode.value
+        |> Result.withDefault (Json.Encode.object [])
