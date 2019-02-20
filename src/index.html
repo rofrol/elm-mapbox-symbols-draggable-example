@@ -27,7 +27,15 @@
 	<script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
 	<script src="elm.js"></script>
         <script>
-	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
+            let onMount = () => {
+		var map = document.querySelector('elm-mapbox-map').map;
+		var marker = new mapboxgl.Marker({
+		draggable: true
+		})
+		.setLngLat([0, 0])
+		.addTo(map);
+	    }
+	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
 	    var app = Elm.Main.init({ node: document.getElementById("elm") });
 	    elmMapbox.registerPorts(app);
 /*
