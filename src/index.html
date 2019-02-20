@@ -29,11 +29,6 @@
 	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
 	    var app = Elm.Main.init({ node: document.getElementById("elm") });
 	    elmMapbox.registerPorts(app);
-            var map = elmMapbox.map;
-            map.on('mouseenter', 'point', function() {
-              map.setPaintProperty('point', 'circle-color', '#3bb2d0');
-              canvas.style.cursor = 'move';
-            });
 /*
 // from https://docs.mapbox.com/mapbox-gl-js/example/drag-a-point/ 
 var geojson = {
