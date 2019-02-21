@@ -4,7 +4,7 @@ module Main exposing (main)
 
 import Browser
 import GeoJSON
-import Html exposing (div, text)
+import Html
 import Html.Attributes as Attrs
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
@@ -170,8 +170,9 @@ view model =
     { title = "Mapbox Example"
     , body =
         [ css
-        , div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
-            [ Html.text <| Debug.toString decodedRenderedFeature
+        , Html.div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
+            [ Html.div [] [ Html.text <| Debug.toString decodedRenderedFeature ]
+            , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature]
             , map
                 [ maxZoom 24
                 , onMouseMove Hover
@@ -182,7 +183,7 @@ view model =
                 , hoveredFeatures model.features
                 ]
                 (style model.over)
-            , div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ text (LngLat.toString model.position) ]
+            , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
             ]
         ]
     }

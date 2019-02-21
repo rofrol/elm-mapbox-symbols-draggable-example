@@ -451,3 +451,10 @@ var map = document.querySelector('elm-mapbox-map').map;
 
 1. How to add this marker after map is loaded?
 2. How to disable draggable?
+
+## Add Marker from Javascript or from Elm
+
+1. From Elm would require changing GeoJson, so I would need to write encoders and decoders for json.
+  - what about performance implications with many points?
+2. From Javascript I would need to write ports and have GeoJSON outsite of Elm?
+

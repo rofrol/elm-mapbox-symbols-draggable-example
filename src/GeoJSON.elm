@@ -1,11 +1,12 @@
-module GeoJSON exposing (geojson, pointsJson, stores)
+module GeoJSON exposing (decodedFeature, geojson, pointsJson, stores)
 
-import Json.Decode
-import Json.Encode
+import Json.Decode as JD
+import Json.Decode.Extra exposing (andMap)
+import Json.Encode as JE
 
 
 geojson =
-    Json.Decode.decodeString Json.Decode.value """
+    JD.decodeString JD.value """
 {
   "type": "FeatureCollection",
   "features": [
@@ -30,11 +31,11 @@ geojson =
     }
   ]
 }
-""" |> Result.withDefault (Json.Encode.object [])
+""" |> Result.withDefault (JE.object [])
 
 
 stores =
-    Json.Decode.decodeString Json.Decode.value """
+    JD.decodeString JD.value """
 {
   "type": "FeatureCollection",
   "features": [
@@ -287,7 +288,65 @@ stores =
     }
   ]
 }
-""" |> Result.withDefault (Json.Encode.object [])
+""" |> Result.withDefault (JE.object [])
+
+
+type alias Geometry =
+    { type_ : String
+    , coordinates : List Float
+    }
+
+
+emptyGeometry =
+    Geometry "" []
+
+
+decodeGeometry =
+    JD.succeed Geometry
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "coordinates" (JD.list JD.float))
+
+
+type alias Feature =
+    { type_ : String
+    , id : Int
+    , geometry : Geometry
+    , properties : JD.Value
+    }
+
+
+emptyFeature =
+    Feature "" 0 emptyGeometry (JE.object [])
+
+
+decodeFeature =
+    JD.succeed Feature
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "id" JD.int)
+        |> andMap (JD.field "geometry" decodeGeometry)
+        |> andMap (JD.field "properties" JD.value)
+
+
+sampleFeatureJson =
+    """
+{
+      "type": "Feature",
+      "id": 12,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.043959498405,
+          38.903883387232
+        ]
+      },
+      "properties": {}
+}
+"""
+
+
+decodedFeature =
+    Result.withDefault emptyFeature <|
+        JD.decodeString decodeFeature sampleFeatureJson
 
 
 pointsJson lng ltd =
@@ -308,5 +367,5 @@ pointsJson lng ltd =
     }]
 }
 """
-        |> Json.Decode.decodeString Json.Decode.value
-        |> Result.withDefault (Json.Encode.object [])
+        |> JD.decodeString JD.value
+        |> Result.withDefault (JE.object [])
