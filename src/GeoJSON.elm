@@ -343,6 +343,25 @@ decodeFeature =
         |> andMap (JD.field "properties" JD.value)
 
 
+type alias FeatureCollection =
+    { type_ : String
+    , features : List Feature
+    }
+
+
+decodeFeatureCollection =
+    JD.succeed FeatureCollection
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "features" JD.list decodeFeature)
+
+
+encodeFeatureCollection features =
+    JE.object
+        [ ( "type", JE.string "FeatureCollection" )
+        , ( "features", JE.list encodeFeature features )
+        ]
+
+
 sampleFeatureJson =
     """
 {
