@@ -173,6 +173,7 @@ view model =
         , Html.div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
             [ Html.div [] [ Html.text <| Debug.toString decodedRenderedFeature ]
             , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature]
+            , Html.div [] [ Html.text <| Debug.toString (Json.Encode.encode 2 GeoJSON.encodedSampleFeature)]
             , map
                 [ maxZoom 24
                 , onMouseMove Hover
