@@ -3,7 +3,8 @@ module Main exposing (main)
 -- from https://github.com/gampleman/elm-mapbox/blob/master/examples/Example01.elm
 
 import Browser exposing (Document)
-import GeoJSON
+import Dict exposing (Dict)
+import GeoJSON exposing (Feature)
 import Html exposing (Html)
 import Html.Attributes as Attrs
 import Json.Decode as JD
@@ -31,7 +32,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { position = LngLat 0 0, features = [], over = False, counter = 0 }, Cmd.none )
+    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.empty }, Cmd.none )
 
 
 renderedFeatureJson =
@@ -125,6 +126,7 @@ type alias Model =
     , features : List JD.Value
     , over : Bool
     , counter : Int
+    , stores : Dict Int Feature
     }
 
 
