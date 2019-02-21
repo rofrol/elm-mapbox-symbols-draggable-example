@@ -2,9 +2,9 @@ module Main exposing (main)
 
 -- from https://github.com/gampleman/elm-mapbox/blob/master/examples/Example01.elm
 
-import Browser
+import Browser exposing (Document)
 import GeoJSON
-import Html
+import Html exposing (Html)
 import Html.Attributes as Attrs
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
@@ -29,6 +29,7 @@ main =
         }
 
 
+init : () -> ( Model, Cmd Msg )
 init () =
     ( { position = LngLat 0 0, features = [], over = False, counter = 0 }, Cmd.none )
 
@@ -119,12 +120,21 @@ decodedRenderedFeature =
     Result.withDefault emptyRenderedFeature <| JD.decodeString decodeRenderedFeature renderedFeatureJson
 
 
+type alias Model =
+    { position : LngLat
+    , features : List JD.Value
+    , over : Bool
+    , counter : Int
+    }
+
+
 type Msg
     = Hover EventData
     | Click EventData
     | Over EventData
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Hover { lngLat, renderedFeatures } ->
@@ -166,14 +176,15 @@ hoveredFeatures =
         >> featureState
 
 
+view : Model -> Document Msg
 view model =
     { title = "Mapbox Example"
     , body =
         [ css
         , Html.div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
             [ Html.div [] [ Html.text <| Debug.toString decodedRenderedFeature ]
-            , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature]
-            , Html.div [] [ Html.text <| Debug.toString (Json.Encode.encode 2 GeoJSON.encodedSampleFeature)]
+            , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature ]
+            , Html.div [] [ Html.text <| Debug.toString (Json.Encode.encode 2 GeoJSON.encodedSampleFeature) ]
             , map
                 [ maxZoom 24
                 , onMouseMove Hover

@@ -34,8 +34,8 @@ geojson =
 """ |> Result.withDefault (JE.object [])
 
 
-stores =
-    JD.decodeString JD.value """
+storesJson =
+    """
 {
   "type": "FeatureCollection",
   "features": [
@@ -288,7 +288,19 @@ stores =
     }
   ]
 }
-""" |> Result.withDefault (JE.object [])
+"""
+
+
+storesOld =
+    JD.decodeString JD.value storesJson |> Result.withDefault (JE.object [])
+
+
+stores =
+    let
+        featureCollection =
+            JD.decodeString decodeFeatureCollection storesJson |> Result.withDefault emptyFeatureCollection
+    in
+    encodeFeatureCollection featureCollection
 
 
 type alias Geometry =
@@ -352,14 +364,18 @@ type alias FeatureCollection =
 decodeFeatureCollection =
     JD.succeed FeatureCollection
         |> andMap (JD.field "type" JD.string)
-        |> andMap (JD.field "features" JD.list decodeFeature)
+        |> andMap (JD.field "features" (JD.list decodeFeature))
 
 
-encodeFeatureCollection features =
+encodeFeatureCollection featureCollection =
     JE.object
-        [ ( "type", JE.string "FeatureCollection" )
-        , ( "features", JE.list encodeFeature features )
+        [ ( "type", JE.string featureCollection.type_ )
+        , ( "features", JE.list encodeFeature featureCollection.features )
         ]
+
+
+emptyFeatureCollection =
+    FeatureCollection "FeatureCollection" []
 
 
 sampleFeatureJson =
