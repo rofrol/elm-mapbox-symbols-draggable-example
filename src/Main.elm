@@ -4,6 +4,7 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Dict exposing (Dict)
+import Flip exposing (flip)
 import GeoJSON exposing (Feature)
 import Html exposing (Html)
 import Html.Attributes as Attrs
@@ -175,28 +176,21 @@ update msg model =
                             False
 
                 maybeNewFeature =
-                    case model.down of
-                        Just id ->
-                            let
-                                maybeOldFeature =
-                                    Dict.get id model.stores
-                            in
-                            case maybeOldFeature of
-                                Just oldFeature ->
-                                    let
-                                        oldGeometry =
-                                            oldFeature.geometry
+                    model.down
+                        |> Maybe.andThen
+                            (flip Dict.get model.stores
+                                >> Maybe.map
+                                    (\oldFeature ->
+                                        let
+                                            oldGeometry =
+                                                oldFeature.geometry
 
-                                        newGeometry =
-                                            { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
-                                    in
-                                    Just { oldFeature | geometry = newGeometry }
-
-                                Nothing ->
-                                    Nothing
-
-                        Nothing ->
-                            Nothing
+                                            newGeometry =
+                                                { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
+                                        in
+                                        { oldFeature | geometry = newGeometry }
+                                    )
+                            )
             in
             case maybeNewFeature of
                 Just newFeature ->
@@ -226,16 +220,15 @@ update msg model =
                     List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
 
                 down =
-                    case List.head decodedRenderedFeatures of
-                        Just feature ->
-                            if feature.layer.id == "locations" then
-                                Just feature.id
+                    List.head decodedRenderedFeatures
+                        |> Maybe.andThen
+                            (\feature ->
+                                if feature.layer.id == "locations" then
+                                    Just feature.id
 
-                            else
-                                Nothing
-
-                        Nothing ->
-                            Nothing
+                                else
+                                    Nothing
+                            )
             in
             ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
 
