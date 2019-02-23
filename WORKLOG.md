@@ -537,3 +537,5 @@ decodeRenderedFeatureLayer =
                 ]
             )
 ```
+
+## TODO: Need to disable dragPan only when moving point
