@@ -32,7 +32,7 @@
 		var marker = new mapboxgl.Marker({
 		    draggable: true
 		})
-		.setLngLat([0, 0])
+		.setLngLat([21.0269753, 52.068688])
 		.addTo(map);
 
 		map.dragPan.disable();
@@ -41,7 +41,7 @@
 		    // console.log(">>>>>>>>>>>>>>>>onMove");
 		    // console.log(e);
 		}
-		map.on('mousemove', onMove);
+		//map.on('mousemove', onMove);
 	    }
 	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
 	    var app = Elm.Main.init({ node: document.getElementById("elm") });

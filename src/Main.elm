@@ -255,18 +255,16 @@ view model =
     , body =
         [ css
         , Html.div [ Attrs.style "width" "100vw", Attrs.style "height" "100vh" ]
-            [ Html.div [] [ Html.text <| Debug.toString decodedRenderedFeature ]
-            , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature ]
-            , Html.div [] [ Html.text <| Debug.toString (Json.Encode.encode 2 GeoJSON.encodedSampleFeature) ]
-            , Html.div [] [ Html.text <| Debug.toString model.stores ]
-            , map
+            [ map
                 [ maxZoom 24
                 , onMouseMove MouseMove
                 , onClick Click
                 , onMouseDown MouseDown
                 , onMouseUp MouseUp
                 , id "my-map"
-                , eventFeaturesLayers [ "locations", "point" ]
+
+                -- , eventFeaturesLayers [ "locations", "point" ]
+                , eventFeaturesLayers [ "locations" ]
                 , hoveredFeatures model.features
                 ]
                 (style model.over model.storesJson)
@@ -281,11 +279,14 @@ style over storesJson =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
-        , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
+
+        -- , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
+        , layers = Styles.Light.style.layers ++ [ locations ]
         , sources =
             Styles.Light.style.sources
                 ++ [ Source.geoJSONFromValue "stores" [] storesJson
-                   , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
+
+                   -- , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
                    ]
         , misc =
             Styles.Light.style.misc
