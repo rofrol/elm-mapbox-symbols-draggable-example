@@ -1,4 +1,4 @@
-module GeoJSON exposing (Feature, FeatureCollection, decodedFeature, encodeFeatureCollection, encodedSampleFeature, geojson, pointsJson, sampleFeature, stores, storesFeatures)
+module GeoJSON exposing (Feature, FeatureCollection, Geometry, decodeGeometry, decodedFeature, emptyGeometry, encodeFeatureCollection, encodedSampleFeature, geojson, pointsJson, sampleFeature, stores, storesFeatures)
 
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)

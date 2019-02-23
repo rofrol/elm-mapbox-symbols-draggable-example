@@ -32,7 +32,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures), down = False }, Cmd.none )
+    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures), down = Nothing }, Cmd.none )
 
 
 renderedFeatureJson =
@@ -65,7 +65,7 @@ renderedFeatureJson =
 
 
 type alias RenderedFeature =
-    { geometry : JD.Value
+    { geometry : GeoJSON.Geometry
     , type_ : String
     , properties : JD.Value
     , id : Int
@@ -77,7 +77,7 @@ type alias RenderedFeature =
 
 emptyRenderedFeature =
     RenderedFeature
-        (Json.Encode.object [])
+        GeoJSON.emptyGeometry
         ""
         (Json.Encode.object [])
         0
@@ -113,7 +113,7 @@ decodeRenderedFeatureLayer =
 
 decodeRenderedFeature =
     JD.succeed RenderedFeature
-        |> andMap (JD.field "geometry" JD.value)
+        |> andMap (JD.field "geometry" GeoJSON.decodeGeometry)
         |> andMap (JD.field "type" JD.string)
         |> andMap (JD.field "properties" JD.value)
         |> andMap (JD.field "id" JD.int)
@@ -132,7 +132,7 @@ type alias Model =
     , over : Bool
     , counter : Int
     , stores : Dict Int Feature
-    , down : Bool
+    , down : Maybe Int
     }
 
 
@@ -148,15 +148,11 @@ update msg model =
     case msg of
         MouseMove { lngLat, renderedFeatures } ->
             let
-                -- _ =
-                --     List.map (\jsonValue -> Debug.log "MouseMove: renderedFeatures" (Json.Encode.encode 2 jsonValue)) renderedFeatures
                 counter =
                     model.counter + 1
 
-                -- |> Debug.log "counter"
                 decodedRenderedFeatures =
                     List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
-                        |> Debug.log "MouseMove: decodedRenderedFeatures"
 
                 over =
                     case List.head decodedRenderedFeatures of
@@ -166,24 +162,40 @@ update msg model =
                         Nothing ->
                             False
 
-                newFeature =
-                    case List.head decodedRenderedFeatures of
-                        Just feature ->
-                            --if feature.layer.id == "locations" then
+                maybeNewFeature =
+                    case model.down of
+                        Just id ->
                             let
-                                f1 =
-                                    Dict.get feature.id model.stores
-
-                                --|> Debug.log "f1"
+                                maybeOldFeature =
+                                    Dict.get id model.stores
                             in
-                            True
+                            case maybeOldFeature of
+                                Just oldFeature ->
+                                    let
+                                        oldGeometry =
+                                            oldFeature.geometry
 
-                        -- else
-                        --     False
+                                        newGeometry =
+                                            { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
+                                    in
+                                    Just { oldFeature | geometry = newGeometry }
+
+                                Nothing ->
+                                    Nothing
+
                         Nothing ->
-                            False
+                            Nothing
             in
-            ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
+            case maybeNewFeature of
+                Just newFeature ->
+                    let
+                        newStores =
+                            Dict.update newFeature.id (Maybe.map (always newFeature)) model.stores
+                    in
+                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = newStores }, Cmd.none )
+
+                Nothing ->
+                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
 
         Click { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures }
@@ -198,12 +210,22 @@ update msg model =
                 decodedRenderedFeatures =
                     List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
 
-                --|> Debug.log "MouseDown: decodedRenderedFeatures"
+                down =
+                    case List.head decodedRenderedFeatures of
+                        Just feature ->
+                            if feature.layer.id == "locations" then
+                                Just feature.id
+
+                            else
+                                Nothing
+
+                        Nothing ->
+                            Nothing
             in
-            ( { model | position = lngLat, features = renderedFeatures, down = True }, Cmd.none )
+            ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
 
         MouseUp { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures, down = False }, Cmd.none )
+            ( { model | position = lngLat, features = renderedFeatures, down = Nothing }, Cmd.none )
 
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
@@ -251,7 +273,6 @@ style over stores =
         , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
         , sources =
             Styles.Light.style.sources
-                --++ [ Source.geoJSONFromValue "stores" [] GeoJSON.stores
                 ++ [ Source.geoJSONFromValue "stores" [] stores
                    , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
                    ]
@@ -269,7 +290,6 @@ locations =
         "stores"
         [ Layer.iconImage (str "restaurant-15")
         , Layer.iconAllowOverlap true
-        , Layer.iconSize (float 2)
         ]
 
 
