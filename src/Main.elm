@@ -30,9 +30,20 @@ main =
         }
 
 
+createStoresJson stores =
+    GeoJSON.encodeFeatureCollection (GeoJSON.FeatureCollection "FeatureCollection" (Dict.values stores))
+
+
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures), down = Nothing }, Cmd.none )
+    let
+        stores =
+            Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures)
+
+        storesJson =
+            createStoresJson stores
+    in
+    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = stores, storesJson = storesJson, down = Nothing }, Cmd.none )
 
 
 renderedFeatureJson =
@@ -132,6 +143,7 @@ type alias Model =
     , over : Bool
     , counter : Int
     , stores : Dict Int Feature
+    , storesJson : JD.Value
     , down : Maybe Int
     }
 
@@ -189,10 +201,13 @@ update msg model =
             case maybeNewFeature of
                 Just newFeature ->
                     let
-                        newStores =
+                        stores =
                             Dict.update newFeature.id (Maybe.map (always newFeature)) model.stores
+
+                        storesJson =
+                            createStoresJson stores
                     in
-                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = newStores }, Cmd.none )
+                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = stores, storesJson = storesJson }, Cmd.none )
 
                 Nothing ->
                     ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
@@ -236,10 +251,6 @@ hoveredFeatures =
 
 view : Model -> Document Msg
 view model =
-    let
-        stores =
-            GeoJSON.encodeFeatureCollection (GeoJSON.FeatureCollection "FeatureCollection" (Dict.values model.stores))
-    in
     { title = "Mapbox Example"
     , body =
         [ css
@@ -258,7 +269,7 @@ view model =
                 , eventFeaturesLayers [ "locations", "point" ]
                 , hoveredFeatures model.features
                 ]
-                (style model.over stores)
+                (style model.over model.storesJson)
             , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
             ]
         ]
@@ -266,14 +277,14 @@ view model =
 
 
 style : Bool -> JD.Value -> Style
-style over stores =
+style over storesJson =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
         , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
         , sources =
             Styles.Light.style.sources
-                ++ [ Source.geoJSONFromValue "stores" [] stores
+                ++ [ Source.geoJSONFromValue "stores" [] storesJson
                    , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
                    ]
         , misc =
