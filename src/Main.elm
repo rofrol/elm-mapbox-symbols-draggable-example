@@ -32,7 +32,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.empty }, Cmd.none )
+    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures), down = False }, Cmd.none )
 
 
 renderedFeatureJson =
@@ -103,7 +103,12 @@ decodeRenderedFeatureLayer =
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "type" JD.string)
         |> andMap (JD.field "source" JD.string)
-        |> andMap (JD.field "paint" JD.value)
+        |> andMap
+            (JD.oneOf
+                [ JD.field "paint" JD.value
+                , JD.field "layout" JD.value
+                ]
+            )
 
 
 decodeRenderedFeature =
@@ -127,34 +132,54 @@ type alias Model =
     , over : Bool
     , counter : Int
     , stores : Dict Int Feature
+    , down : Bool
     }
 
 
 type Msg
-    = Hover EventData
+    = MouseMove EventData
     | Click EventData
-    | Over EventData
+    | MouseDown EventData
+    | MouseUp EventData
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Hover { lngLat, renderedFeatures } ->
+        MouseMove { lngLat, renderedFeatures } ->
             let
-                _ =
-                    List.map (\jsonValue -> Debug.log "renderedFeatures" (Json.Encode.encode 2 jsonValue)) renderedFeatures
-
+                -- _ =
+                --     List.map (\jsonValue -> Debug.log "MouseMove: renderedFeatures" (Json.Encode.encode 2 jsonValue)) renderedFeatures
                 counter =
-                    model.counter + 1 |> Debug.log "counter"
+                    model.counter + 1
 
+                -- |> Debug.log "counter"
                 decodedRenderedFeatures =
-                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures |> Debug.log "decodedRenderedFeatures"
+                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
+                        |> Debug.log "MouseMove: decodedRenderedFeatures"
 
                 over =
                     case List.head decodedRenderedFeatures of
                         Just feature ->
                             feature.layer.id == "point"
 
+                        Nothing ->
+                            False
+
+                newFeature =
+                    case List.head decodedRenderedFeatures of
+                        Just feature ->
+                            --if feature.layer.id == "locations" then
+                            let
+                                f1 =
+                                    Dict.get feature.id model.stores
+
+                                --|> Debug.log "f1"
+                            in
+                            True
+
+                        -- else
+                        --     False
                         Nothing ->
                             False
             in
@@ -168,8 +193,17 @@ update msg model =
                 )
             )
 
-        Over { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures }, Cmd.none )
+        MouseDown { lngLat, renderedFeatures } ->
+            let
+                decodedRenderedFeatures =
+                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
+
+                --|> Debug.log "MouseDown: decodedRenderedFeatures"
+            in
+            ( { model | position = lngLat, features = renderedFeatures, down = True }, Cmd.none )
+
+        MouseUp { lngLat, renderedFeatures } ->
+            ( { model | position = lngLat, features = renderedFeatures, down = False }, Cmd.none )
 
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
@@ -180,6 +214,10 @@ hoveredFeatures =
 
 view : Model -> Document Msg
 view model =
+    let
+        stores =
+            GeoJSON.encodeFeatureCollection (GeoJSON.FeatureCollection "FeatureCollection" (Dict.values model.stores))
+    in
     { title = "Mapbox Example"
     , body =
         [ css
@@ -187,38 +225,41 @@ view model =
             [ Html.div [] [ Html.text <| Debug.toString decodedRenderedFeature ]
             , Html.div [] [ Html.text <| Debug.toString GeoJSON.decodedFeature ]
             , Html.div [] [ Html.text <| Debug.toString (Json.Encode.encode 2 GeoJSON.encodedSampleFeature) ]
+            , Html.div [] [ Html.text <| Debug.toString model.stores ]
             , map
                 [ maxZoom 24
-                , onMouseMove Hover
+                , onMouseMove MouseMove
                 , onClick Click
-                , onMouseOver Over
+                , onMouseDown MouseDown
+                , onMouseUp MouseUp
                 , id "my-map"
                 , eventFeaturesLayers [ "locations", "point" ]
                 , hoveredFeatures model.features
                 ]
-                (style model.over)
+                (style model.over stores)
             , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
             ]
         ]
     }
 
 
-style : Bool -> Style
-style over =
+style : Bool -> JD.Value -> Style
+style over stores =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
         , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
         , sources =
             Styles.Light.style.sources
-                ++ [ Source.geoJSONFromValue "stores" [] GeoJSON.stores
-                   , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 0 0)
+                --++ [ Source.geoJSONFromValue "stores" [] GeoJSON.stores
+                ++ [ Source.geoJSONFromValue "stores" [] stores
+                   , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
                    ]
         , misc =
             Styles.Light.style.misc
-                --++ [ Style.defaultCenter <| LngLat -77.034084 38.909671
-                ++ [ Style.defaultCenter <| LngLat 0 0
-                   , Style.defaultZoomLevel 4
+                -- manual center based on borders on google maps
+                ++ [ Style.defaultCenter <| LngLat 21.0169753 52.0738102
+                   , Style.defaultZoomLevel 13.1
                    ]
         }
 
@@ -228,6 +269,7 @@ locations =
         "stores"
         [ Layer.iconImage (str "restaurant-15")
         , Layer.iconAllowOverlap true
+        , Layer.iconSize (float 2)
         ]
 
 

@@ -458,3 +458,82 @@ var map = document.querySelector('elm-mapbox-map').map;
   - what about performance implications with many points?
 2. From Javascript I would need to write ports and have GeoJSON outsite of Elm?
 
+## Icon size small
+
+When enlarging bitmap icons, they get blurred:
+
+```elm
+locations =
+    Layer.symbol "locations"
+        "stores"
+        [ Layer.iconImage (str "restaurant-15")
+        , Layer.iconAllowOverlap true
+        , Layer.iconSize (float 2)
+        ]
+```
+
+>If you adjust an icon's size in the Mapbox Studio style editor or in code, you might notice that it seems fuzzy or dithered. Icons look best when the size property is set to 1. We recommend uploading larger SVGs if you want to display bigger images on the map.
+>https://docs.mapbox.com/help/troubleshooting/studio-svg-upload-errors/#size-property-causing-icon-to-look-blurry
+
+## Add image
+
+rofrol4:44 PM
+
+@gampleman How to add my own image like this https://docs.mapbox.com/mapbox-gl-js/example/add-image/?
+
+I know there is option to add image from sprite like here https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/Mapbox-Layer#iconImage, but I have not created any sprite yet.
+
+There is also this https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/Mapbox-Source#image but I don't get it why there are Coords? How should I use it?
+
+gampleman4:46 PM
+
+Mapbox.Source.image is for a different use case, i.e. more like https://docs.mapbox.com/mapbox-gl-js/example/image-on-a-map/
+
+I would recommend adding icon images to your style in mapbox studio
+
+This will create the sprite for you and is the most efficient
+
+However, nothing prevents you from doing this using the JS api. onMount may be a good time to call this
+
+rofrol4:55 PM
+
+Do you know if mapbox sprite supports svg? Do I need svg icons or bitmap will be sufficient?
+
+svg will give ability to resize icons freely without loosing quality, but I don't know if svg icons are commons/any drawbacks.
+
+## Layer.symbol does not get layer type or id
+
+That is because layer objects are different for circle and symbol:
+
+```elm
+renderedFeatureLayerCircle =
+    { id = "point"
+    , type_ = "circle"
+    , source = "pointsJson"
+    , paint = { circleRadius = 10, circleColor = "rgba(59, 178, 208, 1)" }
+    }
+
+
+renderedFeatureLayerSymbol =
+    { id = "locations"
+    , type_ = "symbol"
+    , source = "stores"
+    , layout = { iconSize = 2, iconAllowOverlap = true, iconImage = "restaurant-15" }
+    }
+```
+
+I needed to change decoder to
+
+```elm
+decodeRenderedFeatureLayer =
+    JD.succeed RenderedFeatureLayer
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "type" JD.string)
+        |> andMap (JD.field "source" JD.string)
+        |> andMap
+            (JD.oneOf
+                [ JD.field "paint" JD.value
+                , JD.field "layout" JD.value
+                ]
+            )
+```

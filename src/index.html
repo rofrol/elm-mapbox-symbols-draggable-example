@@ -30,10 +30,17 @@
             let onMount = () => {
 		var map = document.querySelector('elm-mapbox-map').map;
 		var marker = new mapboxgl.Marker({
-		draggable: true
+		    draggable: true
 		})
 		.setLngLat([0, 0])
 		.addTo(map);
+
+		map.dragPan.disable();
+		function onMove(e) {
+		    //console.log(">>>>>>>>>>>>>>>>onMove");
+		    //console.log(e);
+		}
+		map.on('mousemove', onMove);
 	    }
 	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
 	    var app = Elm.Main.init({ node: document.getElementById("elm") });

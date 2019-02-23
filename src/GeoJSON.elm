@@ -1,4 +1,4 @@
-module GeoJSON exposing (Feature, decodedFeature, encodedSampleFeature, geojson, pointsJson, stores)
+module GeoJSON exposing (Feature, FeatureCollection, decodedFeature, encodeFeatureCollection, encodedSampleFeature, geojson, pointsJson, sampleFeature, stores, storesFeatures)
 
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
@@ -386,8 +386,8 @@ sampleFeatureJson =
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -77.043959498405,
-          38.903883387232
+          21.024688,
+          52.068688
         ]
       },
       "properties": {}
@@ -401,11 +401,25 @@ sampleFeature =
         12
         (Geometry
             "Point"
-            [ -77.043959498405
-            , 38.903883387232
+            [ 21.024688
+            , 52.068688
             ]
         )
         (JE.object [])
+
+
+storesFeatures =
+    [ Feature
+        "Feature"
+        1
+        (Geometry
+            "Point"
+            [ 21.024688
+            , 52.068688
+            ]
+        )
+        (JE.object [])
+    ]
 
 
 encodedSampleFeature =
@@ -427,9 +441,9 @@ pointsJson lng ltd =
         "geometry": {
             "type": "Point",
             "coordinates": ["""
-        ++ String.fromInt lng
+        ++ String.fromFloat lng
         ++ ","
-        ++ String.fromInt ltd
+        ++ String.fromFloat ltd
         ++ """]
         }
     }]
