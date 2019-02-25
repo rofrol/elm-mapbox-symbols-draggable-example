@@ -1,7 +1,5 @@
 port module Main exposing (main)
 
--- from https://github.com/gampleman/elm-mapbox/blob/master/examples/Example01.elm
-
 import Browser exposing (Document)
 import Dict exposing (Dict)
 import Flip exposing (flip)
