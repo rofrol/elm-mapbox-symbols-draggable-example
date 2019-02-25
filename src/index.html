@@ -24,24 +24,9 @@
     <body>
 	<div id="elm"></div>
 	<script src="node_modules/elm-mapbox/dist/elm-mapbox.umd.js"></script>
-	<script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
 	<script src="elm.js"></script>
         <script>
-            let onMount = () => {
-		var map = document.querySelector('elm-mapbox-map').map;
-		var marker = new mapboxgl.Marker({
-		    draggable: true
-		})
-		.setLngLat([21.0269753, 52.068688])
-		.addTo(map);
-
-		function onMove(e) {
-		    // console.log(">>>>>>>>>>>>>>>>onMove");
-		    // console.log(e);
-		}
-		//map.on('mousemove', onMove);
-	    }
-	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
+	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN'});
 	    var app = Elm.Main.init({ node: document.getElementById("elm") });
 	    elmMapbox.registerPorts(app);
 
