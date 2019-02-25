@@ -538,4 +538,8 @@ decodeRenderedFeatureLayer =
             )
 ```
 
-## TODO: Need to disable dragPan only when moving point
+## Need to disable dragPan only when moving point
+
+DONE
+
+- WARNING: Ports called asynchronously if inside Cmd.batch https://github.com/elm/core/issues/989

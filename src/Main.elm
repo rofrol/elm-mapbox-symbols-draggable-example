@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 -- from https://github.com/gampleman/elm-mapbox/blob/master/examples/Example01.elm
 
@@ -201,7 +201,7 @@ update msg model =
                         storesJson =
                             createStoresJson stores
                     in
-                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = stores, storesJson = storesJson }, Cmd.none )
+                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = stores, storesJson = storesJson }, dragPanEnable False )
 
                 Nothing ->
                     ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
@@ -233,7 +233,7 @@ update msg model =
             ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
 
         MouseUp { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures, down = Nothing }, Cmd.none )
+            ( { model | position = lngLat, features = renderedFeatures, down = Nothing }, dragPanEnable True )
 
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
@@ -312,3 +312,11 @@ pointsLayer over =
         [ Layer.circleColor color
         , Layer.circleRadius (float 10)
         ]
+
+
+
+-- Ports
+-- WARNING: Ports called asynchronously if inside Cmd.batch https://github.com/elm/core/issues/989
+
+
+port dragPanEnable : Bool -> Cmd msg
