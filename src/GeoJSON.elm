@@ -1,37 +1,8 @@
-module GeoJSON exposing (Feature, FeatureCollection, Geometry, decodeGeometry, decodedFeature, emptyGeometry, encodeFeatureCollection, encodedSampleFeature, geojson, pointsJson, sampleFeature, stores, storesFeatures)
+module GeoJSON exposing (Feature, FeatureCollection, Geometry, decodeGeometry, decodedFeature, emptyGeometry, encodeFeatureCollection, encodedSampleFeature, pointsJson, sampleFeature, stores, storesFeatures)
 
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as JE
-
-
-geojson =
-    JD.decodeString JD.value """
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "id": 1,
-      "properties": {
-        "name": "Bermuda Triangle",
-        "area": 1150180
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-64.73, 32.31],
-            [-80.19, 25.76],
-            [-66.09, 18.43],
-            [-64.73, 32.31]
-          ]
-        ]
-      }
-    }
-  ]
-}
-""" |> Result.withDefault (JE.object [])
 
 
 storesJson =
