@@ -35,3 +35,7 @@ Based on:
 
 - https://github.com/gampleman/elm-mapbox/blob/master/examples/Example01.elm
 - https://docs.mapbox.com/mapbox-gl-js/example/drag-a-point/ 
+
+## Result
+
+![](/screencapture.gif)
