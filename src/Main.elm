@@ -8,6 +8,7 @@ import Flip exposing (flip)
 import GeoJSON exposing (Feature)
 import Html exposing (Html)
 import Html.Attributes as Attrs
+import Html.Events as Events
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode
@@ -44,7 +45,17 @@ init () =
         storesJson =
             createStoresJson stores
     in
-    ( { position = LngLat 0 0, features = [], over = False, counter = 0, stores = stores, storesJson = storesJson, down = Nothing }, Cmd.none )
+    ( { position = LngLat 0 0
+      , features = []
+      , over = False
+      , counter = 0
+      , stores = stores
+      , storesJson = storesJson
+      , down = Nothing
+      , symbolDraggable = False
+      }
+    , Cmd.none
+    )
 
 
 renderedFeatureJson =
@@ -146,6 +157,7 @@ type alias Model =
     , stores : Dict Int Feature
     , storesJson : JD.Value
     , down : Maybe Int
+    , symbolDraggable : Bool
     }
 
 
@@ -154,6 +166,7 @@ type Msg
     | Click EventData
     | MouseDown EventData
     | MouseUp EventData
+    | SymbolDraggable Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -215,25 +228,32 @@ update msg model =
             )
 
         MouseDown { lngLat, renderedFeatures } ->
-            let
-                decodedRenderedFeatures =
-                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
+            if model.symbolDraggable then
+                let
+                    decodedRenderedFeatures =
+                        List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
 
-                down =
-                    List.head decodedRenderedFeatures
-                        |> Maybe.andThen
-                            (\feature ->
-                                if feature.layer.id == "locations" then
-                                    Just feature.id
+                    down =
+                        List.head decodedRenderedFeatures
+                            |> Maybe.andThen
+                                (\feature ->
+                                    if feature.layer.id == "locations" then
+                                        Just feature.id
 
-                                else
-                                    Nothing
-                            )
-            in
-            ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
+                                    else
+                                        Nothing
+                                )
+                in
+                ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         MouseUp { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures, down = Nothing }, dragPanEnable True )
+
+        SymbolDraggable symbolDraggable ->
+            ( { model | symbolDraggable = symbolDraggable }, Cmd.none )
 
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
@@ -262,6 +282,21 @@ view model =
                 ]
                 (style model.over model.storesJson)
             , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
+            , Html.div
+                [ Attrs.style "position" "absolute"
+                , Attrs.style "bottom" "20px"
+                , Attrs.style "right" "20px"
+                ]
+                [ Html.label
+                    [ Events.onCheck SymbolDraggable
+                    ]
+                    [ Html.input
+                        [ Attrs.type_ "checkbox"
+                        ]
+                        []
+                    , Html.text "symobol draggable"
+                    ]
+                ]
             ]
         ]
     }
