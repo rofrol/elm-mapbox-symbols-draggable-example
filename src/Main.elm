@@ -34,18 +34,21 @@ createStoresJson stores =
     GeoJSON.encodeFeatureCollection (GeoJSON.FeatureCollection "FeatureCollection" (Dict.values stores))
 
 
+featuresToStores storesFeatures =
+    Dict.fromList (List.map (\store -> ( store.id, store )) storesFeatures)
+
+
 init : () -> ( Model, Cmd Msg )
 init () =
     let
         stores =
-            Dict.fromList (List.map (\store -> ( store.id, store )) GeoJSON.storesFeatures)
+            featuresToStores GeoJSON.storesFeatures
 
         storesJson =
             createStoresJson stores
     in
     ( { position = LngLat 0 0
       , features = []
-      , over = False
       , counter = 0
       , stores = stores
       , storesJson = storesJson
@@ -150,7 +153,6 @@ decodedRenderedFeature =
 type alias Model =
     { position : LngLat
     , features : List JD.Value
-    , over : Bool
     , counter : Int
     , stores : Dict Int Feature
     , storesJson : JD.Value
@@ -212,10 +214,15 @@ update msg model =
                         storesJson =
                             createStoresJson stores
                     in
-                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over, stores = stores, storesJson = storesJson }, dragPanEnable False )
+                    ( { model
+                        | stores = stores
+                        , storesJson = storesJson
+                      }
+                    , dragPanEnable False
+                    )
 
                 Nothing ->
-                    ( { model | position = lngLat, features = renderedFeatures, counter = counter, over = over }, Cmd.none )
+                    ( { model | position = lngLat, features = renderedFeatures, counter = counter }, Cmd.none )
 
         Click { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures }
@@ -242,13 +249,13 @@ update msg model =
                                         Nothing
                                 )
                 in
-                ( { model | position = lngLat, features = renderedFeatures, down = down }, Cmd.none )
+                ( { model | down = down }, Cmd.none )
 
             else
                 ( model, Cmd.none )
 
         MouseUp { lngLat, renderedFeatures } ->
-            ( { model | position = lngLat, features = renderedFeatures, down = Nothing }, dragPanEnable True )
+            ( { model | down = Nothing }, dragPanEnable True )
 
         SymbolDraggable symbolDraggable ->
             ( { model | symbolDraggable = symbolDraggable }, Cmd.none )
@@ -273,12 +280,10 @@ view model =
                 , onMouseDown MouseDown
                 , onMouseUp MouseUp
                 , id "my-map"
-
-                -- , eventFeaturesLayers [ "locations", "point" ]
                 , eventFeaturesLayers [ "locations" ]
                 , hoveredFeatures model.features
                 ]
-                (style model.over model.storesJson)
+                (style model.storesJson)
             , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
             , Html.div
                 [ Attrs.style "position" "absolute"
@@ -300,19 +305,15 @@ view model =
     }
 
 
-style : Bool -> JD.Value -> Style
-style over storesJson =
+style : JD.Value -> Style
+style storesJson =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
-
-        -- , layers = Styles.Light.style.layers ++ [ locations, pointsLayer over ]
-        , layers = Styles.Light.style.layers ++ [ locations ]
+        , layers = Styles.Light.style.layers ++ [ locations Nothing ]
         , sources =
             Styles.Light.style.sources
                 ++ [ Source.geoJSONFromValue "stores" [] storesJson
-
-                   -- , Source.geoJSONFromValue "pointsJson" [] (GeoJSON.pointsJson 21.0169753 52.068688)
                    ]
         , misc =
             Styles.Light.style.misc
@@ -323,28 +324,23 @@ style over storesJson =
         }
 
 
-locations =
+locations maybeId =
     Layer.symbol "locations"
         "stores"
+    <|
         [ Layer.iconImage (str "restaurant-15")
         , Layer.iconAllowOverlap true
+
+        -- filter: "==", ["id"], "Hello-4"
+        -- https://github.com/mapbox/mapbox-gl-js/issues/6552#issuecomment-383373365
         ]
+            ++ (case maybeId of
+                    Just id ->
+                        [ Layer.filter (E.notEqual E.id (E.int id)) ]
 
-
-pointsLayer over =
-    let
-        color =
-            if over then
-                E.rgba 59 178 208 1
-
-            else
-                E.rgba 56 135 190 1
-    in
-    Layer.circle "point"
-        "pointsJson"
-        [ Layer.circleColor color
-        , Layer.circleRadius (float 10)
-        ]
+                    Nothing ->
+                        []
+               )
 
 
 
