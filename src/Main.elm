@@ -49,115 +49,22 @@ init () =
     in
     ( { position = LngLat 0 0
       , features = []
-      , counter = 0
       , stores = stores
       , storesJson = storesJson
-      , down = Nothing
       , symbolDraggable = False
+      , maybeDraggedFeature = Nothing
       }
     , Cmd.none
     )
 
 
-renderedFeatureJson =
-    """{
-  "geometry": {
-    "type": "Point",
-    "coordinates": [
-      0,
-      0
-    ]
-  },
-  "type": "Feature",
-  "properties": {},
-  "id": 1,
-  "layer": {
-    "id": "point",
-    "type": "circle",
-    "source": "pointsJson",
-    "paint": {
-      "circle-radius": 10,
-      "circle-color": "rgba(56, 135, 190, 1)"
-    }
-  },
-  "source": "pointsJson",
-  "state": {
-    "hover": true
-  }
-}
-"""
-
-
-type alias RenderedFeature =
-    { geometry : GeoJSON.Geometry
-    , type_ : String
-    , properties : JD.Value
-    , id : Int
-    , layer : RenderedFeatureLayer
-    , source : String
-    , state : JD.Value
-    }
-
-
-emptyRenderedFeature =
-    RenderedFeature
-        GeoJSON.emptyGeometry
-        ""
-        (Json.Encode.object [])
-        0
-        emptyRenderedFeatureLayer
-        ""
-        (Json.Encode.object [])
-
-
-type alias RenderedFeatureLayer =
-    { id : String
-    , type_ : String
-    , source : String
-    , paint : JD.Value
-    }
-
-
-emptyRenderedFeatureLayer =
-    RenderedFeatureLayer "" "" "" (Json.Encode.object [])
-
-
-decodeRenderedFeatureLayer =
-    JD.succeed RenderedFeatureLayer
-        |> andMap (JD.field "id" JD.string)
-        |> andMap (JD.field "type" JD.string)
-        |> andMap (JD.field "source" JD.string)
-        |> andMap
-            (JD.oneOf
-                [ JD.field "paint" JD.value
-                , JD.field "layout" JD.value
-                ]
-            )
-
-
-decodeRenderedFeature =
-    JD.succeed RenderedFeature
-        |> andMap (JD.field "geometry" GeoJSON.decodeGeometry)
-        |> andMap (JD.field "type" JD.string)
-        |> andMap (JD.field "properties" JD.value)
-        |> andMap (JD.field "id" JD.int)
-        |> andMap (JD.field "layer" decodeRenderedFeatureLayer)
-        |> andMap (JD.field "source" JD.string)
-        |> andMap (JD.field "state" JD.value)
-
-
-decodedRenderedFeature =
-    Result.withDefault emptyRenderedFeature <| JD.decodeString decodeRenderedFeature renderedFeatureJson
-
-
 type alias Model =
     { position : LngLat
     , features : List JD.Value
-    , counter : Int
     , stores : Dict Int Feature
     , storesJson : JD.Value
-    , down : Maybe Int
     , symbolDraggable : Bool
+    , maybeDraggedFeature : Maybe Feature
     }
 
 
@@ -173,56 +80,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         MouseMove { lngLat, renderedFeatures } ->
-            let
-                counter =
-                    model.counter + 1
-
-                decodedRenderedFeatures =
-                    List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
-
-                over =
-                    case List.head decodedRenderedFeatures of
-                        Just feature ->
-                            feature.layer.id == "point"
-
-                        Nothing ->
-                            False
-
-                maybeNewFeature =
-                    model.down
-                        |> Maybe.andThen
-                            (flip Dict.get model.stores
-                                >> Maybe.map
-                                    (\oldFeature ->
-                                        let
-                                            oldGeometry =
-                                                oldFeature.geometry
-
-                                            newGeometry =
-                                                { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
-                                        in
-                                        { oldFeature | geometry = newGeometry }
-                                    )
-                            )
-            in
-            case maybeNewFeature of
-                Just newFeature ->
+            case model.maybeDraggedFeature of
+                Just oldFeature ->
                     let
-                        stores =
-                            Dict.update newFeature.id (Maybe.map (always newFeature)) model.stores
+                        oldGeometry =
+                            oldFeature.geometry
 
-                        storesJson =
-                            createStoresJson stores
+                        newGeometry =
+                            { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
+
+                        maybeDraggedFeature =
+                            Just { oldFeature | geometry = newGeometry }
                     in
-                    ( { model
-                        | stores = stores
-                        , storesJson = storesJson
-                      }
-                    , dragPanEnable False
-                    )
+                    ( { model | maybeDraggedFeature = maybeDraggedFeature }, dragPanEnable False )
 
                 Nothing ->
-                    ( { model | position = lngLat, features = renderedFeatures, counter = counter }, Cmd.none )
+                    ( model, Cmd.none )
 
         Click { lngLat, renderedFeatures } ->
             ( { model | position = lngLat, features = renderedFeatures }
@@ -236,26 +109,55 @@ update msg model =
             if model.symbolDraggable then
                 let
                     decodedRenderedFeatures =
-                        List.map (Result.withDefault emptyRenderedFeature << JD.decodeValue decodeRenderedFeature) renderedFeatures
+                        List.map (Result.withDefault GeoJSON.emptyRenderedFeature << JD.decodeValue GeoJSON.decodeRenderedFeature) renderedFeatures
 
-                    down =
+                    maybeDraggedFeature =
                         List.head decodedRenderedFeatures
                             |> Maybe.andThen
                                 (\feature ->
                                     if feature.layer.id == "locations" then
-                                        Just feature.id
+                                        Dict.get feature.id model.stores
+                                            |> Maybe.map
+                                                (\oldFeature ->
+                                                    let
+                                                        oldGeometry =
+                                                            oldFeature.geometry
+
+                                                        newGeometry =
+                                                            { oldGeometry | coordinates = [ lngLat.lng, lngLat.lat ] }
+                                                    in
+                                                    { oldFeature | geometry = newGeometry }
+                                                )
 
                                     else
                                         Nothing
                                 )
                 in
-                ( { model | down = down }, Cmd.none )
+                ( { model | maybeDraggedFeature = maybeDraggedFeature }, Cmd.none )
 
             else
                 ( model, Cmd.none )
 
         MouseUp { lngLat, renderedFeatures } ->
-            ( { model | down = Nothing }, dragPanEnable True )
+            case model.maybeDraggedFeature of
+                Just draggedFeature ->
+                    let
+                        stores =
+                            Dict.update draggedFeature.id (Maybe.map (always draggedFeature)) model.stores
+
+                        storesJson =
+                            createStoresJson stores
+                    in
+                    ( { model
+                        | stores = stores
+                        , storesJson = storesJson
+                        , maybeDraggedFeature = Nothing
+                      }
+                    , dragPanEnable True
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         SymbolDraggable symbolDraggable ->
             ( { model | symbolDraggable = symbolDraggable }, Cmd.none )
@@ -280,10 +182,18 @@ view model =
                 , onMouseDown MouseDown
                 , onMouseUp MouseUp
                 , id "my-map"
-                , eventFeaturesLayers [ "locations" ]
+                , eventFeaturesLayers <|
+                    [ "locations" ]
+                        ++ (case model.maybeDraggedFeature of
+                                Just feature ->
+                                    [ "draggedFeatureLayer" ]
+
+                                Nothing ->
+                                    []
+                           )
                 , hoveredFeatures model.features
                 ]
-                (style model.storesJson)
+                (style model.storesJson model.maybeDraggedFeature)
             , Html.div [ Attrs.style "position" "absolute", Attrs.style "bottom" "20px", Attrs.style "left" "20px" ] [ Html.text (LngLat.toString model.position) ]
             , Html.div
                 [ Attrs.style "position" "absolute"
@@ -297,7 +207,7 @@ view model =
                         [ Attrs.type_ "checkbox"
                         ]
                         []
-                    , Html.text "symobol draggable"
+                    , Html.text "draggable"
                     ]
                 ]
             ]
@@ -305,15 +215,25 @@ view model =
     }
 
 
-style : JD.Value -> Style
-style storesJson =
+style : JD.Value -> Maybe Feature -> Style
+style storesJson maybeDraggedFeature =
+    let
+        features =
+            case maybeDraggedFeature of
+                Just feature ->
+                    [ feature ]
+
+                Nothing ->
+                    []
+    in
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
-        , layers = Styles.Light.style.layers ++ [ locations Nothing ]
+        , layers = Styles.Light.style.layers ++ [ locations maybeDraggedFeature, draggedFeatureLayer maybeDraggedFeature ]
         , sources =
             Styles.Light.style.sources
                 ++ [ Source.geoJSONFromValue "stores" [] storesJson
+                   , Source.geoJSONFromValue "draggedFeatureSource" [] (createStoresJson <| featuresToStores features)
                    ]
         , misc =
             Styles.Light.style.misc
@@ -324,7 +244,7 @@ style storesJson =
         }
 
 
-locations maybeId =
+locations maybeDraggedFeature =
     Layer.symbol "locations"
         "stores"
     <|
@@ -334,13 +254,23 @@ locations maybeId =
         -- filter: "==", ["id"], "Hello-4"
         -- https://github.com/mapbox/mapbox-gl-js/issues/6552#issuecomment-383373365
         ]
-            ++ (case maybeId of
-                    Just id ->
-                        [ Layer.filter (E.notEqual E.id (E.int id)) ]
+            ++ (case maybeDraggedFeature of
+                    Just feature ->
+                        [ Layer.filter (E.notEqual E.id (E.int feature.id)) ]
 
                     Nothing ->
                         []
                )
+
+
+draggedFeatureLayer maybeId =
+    Layer.symbol "draggedFeatureLayer"
+        "draggedFeatureSource"
+    <|
+        [ Layer.iconImage (str "restaurant-15")
+        , Layer.iconAllowOverlap true
+        , Layer.iconSize (float 2)
+        ]
 
 
 
