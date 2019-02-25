@@ -1,4 +1,4 @@
-# Front-end Engineer Coding Challenge
+# elm-mapbox-symbols-draggable-example
 
 ## Build a map-based web application
 
