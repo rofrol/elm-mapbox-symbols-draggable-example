@@ -72,6 +72,7 @@ type Msg
     | MouseDown EventData
     | MouseUp EventData
     | SymbolDraggable Bool
+    | MarkerDraggable Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -160,6 +161,9 @@ update msg model =
         SymbolDraggable symbolDraggable ->
             ( { model | symbolDraggable = symbolDraggable }, Cmd.none )
 
+        MarkerDraggable enable ->
+            ( model, dragEnable enable )
+
 
 hoveredFeatures : List Json.Encode.Value -> MapboxAttr msg
 hoveredFeatures =
@@ -198,14 +202,25 @@ view model =
                 , Attrs.style "bottom" "20px"
                 , Attrs.style "right" "20px"
                 ]
-                [ Html.label
-                    [ Events.onCheck SymbolDraggable
-                    ]
-                    [ Html.input
-                        [ Attrs.type_ "checkbox"
+                [ Html.div []
+                    [ Html.label
+                        [ Events.onCheck SymbolDraggable
                         ]
-                        []
-                    , Html.text "draggable"
+                        [ Html.input
+                            [ Attrs.type_ "checkbox"
+                            ]
+                            []
+                        , Html.text "draggable"
+                        ]
+                    , Html.label
+                        [ Events.onCheck MarkerDraggable
+                        ]
+                        [ Html.input
+                            [ Attrs.type_ "checkbox"
+                            ]
+                            []
+                        , Html.text "marker draggable"
+                        ]
                     ]
                 ]
             ]
@@ -277,6 +292,9 @@ draggedFeatureLayer =
 
 
 port dragPanEnable : Bool -> Cmd msg
+
+
+port dragEnable : Bool -> Cmd msg
 
 
 port addMarkers : Value -> Cmd msg

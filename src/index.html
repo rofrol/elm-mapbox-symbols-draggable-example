@@ -64,9 +64,10 @@
 	      map.dragPan.disable();
       });
 
+      var markers;
       app.ports.addMarkers.subscribe(function(stores) {
 	  var map = document.querySelector('elm-mapbox-map').map;
-	  stores.features.forEach(function(marker) {
+	  markers = stores.features.map(function(marker) {
 	      // Create a div element for the marker
 	      var el = document.createElement('div');
 	      // Add a class called 'marker' to each div
@@ -74,10 +75,23 @@
 	      // By default the image for your custom marker will be anchored
 	      // by its center. Adjust the position accordingly
 	      // Create the custom markers, set their position, and add to map
-	      new mapboxgl.Marker(el, { offset: [0, -23], draggable: true })
+	      return new mapboxgl.Marker(el, { offset: [0, -23] })
 		  .setLngLat(marker.geometry.coordinates)
 		  .addTo(map);
 	  });
+      });
+
+      app.ports.dragEnable.subscribe(function(enable) {
+	  markers.forEach(function(marker) {
+	      marker.setDraggable(enable);
+	  });
+
+	  var map = document.querySelector('elm-mapbox-map').map;
+	  if(enable)
+	      map.dragPan.enable();
+	  else
+	      map.dragPan.disable();
+
       });
     </script>
   </body>
