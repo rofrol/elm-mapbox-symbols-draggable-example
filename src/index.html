@@ -1,57 +1,84 @@
 <!DOCTYPE HTML>
 <html>
-    <head>
-	<meta charset="UTF-8">
-	<title>Main</title>
-	<style>
-	    /* https://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
-	    /* apply a natural box layout model to all elements, but allowing components to change */
-	    html {
-		box-sizing: border-box;
-	    }
-	    *, *:before, *:after {
-		box-sizing: inherit;
-	    }
+  <head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+    <style>
+      /* https://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
+      /* apply a natural box layout model to all elements, but allowing components to change */
+      html {
+	  box-sizing: border-box;
+      }
+      *, *:before, *:after {
+	  box-sizing: inherit;
+      }
 
-	    body {
-		margin: 0;
-		padding: 0;
-	    }
-	</style>
-	<link href='node_modules/mapbox-gl/dist/mapbox-gl.css' rel='stylesheet' />
-    </head>
+      body {
+	  margin: 0;
+	  padding: 0;
+      }
 
-    <body>
-	<div id="elm"></div>
-	<script src="node_modules/elm-mapbox/dist/elm-mapbox.umd.js"></script>
-	<script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
-	<script src="elm.js"></script>
-        <script>
-            let onMount = () => {
-		var map = document.querySelector('elm-mapbox-map').map;
-		var marker = new mapboxgl.Marker({
-		    draggable: true
-		})
-		.setLngLat([21.0269753, 52.068688])
-		.addTo(map);
+      .marker {
+	  border: none;
+	  cursor: pointer;
+	  height: 56px;
+	  width: 56px;
+	  background-image: url('https://docs.mapbox.com/help/demos/store-locator/marker.png');
+	  background-color: rgba(0, 0, 0, 0);
+      }
 
-		function onMove(e) {
-		    // console.log(">>>>>>>>>>>>>>>>onMove");
-		    // console.log(e);
-		}
-		//map.on('mousemove', onMove);
-	    }
-	    elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
-	    var app = Elm.Main.init({ node: document.getElementById("elm") });
-	    elmMapbox.registerPorts(app);
+    </style>
+    <link href='node_modules/mapbox-gl/dist/mapbox-gl.css' rel='stylesheet' />
+  </head>
 
-            app.ports.dragPanEnable.subscribe(function(enable) {
-	        var map = document.querySelector('elm-mapbox-map').map;
-		if(enable)
-		    map.dragPan.enable();
-		else 
-		    map.dragPan.disable();
-            });
-	</script>
-    </body>
+  <body>
+    <div id="elm"></div>
+    <script src="node_modules/elm-mapbox/dist/elm-mapbox.umd.js"></script>
+    <script src='node_modules/mapbox-gl/dist/mapbox-gl.js'></script>
+    <script src="elm.js"></script>
+    <script>
+      function onMount() {
+	  var map = document.querySelector('elm-mapbox-map').map;
+	  var marker = new mapboxgl.Marker({
+	      draggable: true
+	  })
+	      .setLngLat([21.0269753, 52.068688])
+	      .addTo(map);
+
+	  function onMove(e) {
+	      // console.log(">>>>>>>>>>>>>>>>onMove");
+	      // console.log(e);
+	  }
+	  //map.on('mousemove', onMove);
+      }
+
+      elmMapbox.registerCustomElement({token: 'MAPBOX_TOKEN', onMount});
+      var app = Elm.Main.init({ node: document.getElementById("elm") });
+      elmMapbox.registerPorts(app);
+
+      app.ports.dragPanEnable.subscribe(function(enable) {
+	  var map = document.querySelector('elm-mapbox-map').map;
+	  if(enable)
+	      map.dragPan.enable();
+	  else
+	      map.dragPan.disable();
+      });
+
+      app.ports.addMarkers.subscribe(function(stores) {
+	  var map = document.querySelector('elm-mapbox-map').map;
+	  stores.features.forEach(function(marker) {
+	      // Create a div element for the marker
+	      var el = document.createElement('div');
+	      // Add a class called 'marker' to each div
+	      el.className = 'marker';
+	      // By default the image for your custom marker will be anchored
+	      // by its center. Adjust the position accordingly
+	      // Create the custom markers, set their position, and add to map
+	      new mapboxgl.Marker(el, { offset: [0, -23], draggable: true })
+		  .setLngLat(marker.geometry.coordinates)
+		  .addTo(map);
+	  });
+      });
+    </script>
+  </body>
 </html>

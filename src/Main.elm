@@ -6,7 +6,7 @@ import GeoJSON exposing (Feature)
 import Html exposing (Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
-import Json.Decode as JD
+import Json.Decode as JD exposing (Value)
 import Json.Encode
 import LngLat exposing (LngLat)
 import MapCommands
@@ -52,15 +52,15 @@ init () =
       , symbolDraggable = False
       , maybeDraggedFeature = Nothing
       }
-    , Cmd.none
+    , addMarkers storesJson
     )
 
 
 type alias Model =
     { position : LngLat
-    , features : List JD.Value
+    , features : List Value
     , stores : Dict Int Feature
-    , storesJson : JD.Value
+    , storesJson : Value
     , symbolDraggable : Bool
     , maybeDraggedFeature : Maybe Feature
     }
@@ -213,7 +213,7 @@ view model =
     }
 
 
-style : JD.Value -> Maybe Feature -> Style
+style : Value -> Maybe Feature -> Style
 style storesJson maybeDraggedFeature =
     let
         features =
@@ -277,3 +277,6 @@ draggedFeatureLayer =
 
 
 port dragPanEnable : Bool -> Cmd msg
+
+
+port addMarkers : Value -> Cmd msg
