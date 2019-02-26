@@ -2,19 +2,17 @@ port module Main exposing (main)
 
 import Browser exposing (Document)
 import Dict exposing (Dict)
-import Flip exposing (flip)
 import GeoJSON exposing (Feature)
 import Html exposing (Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
 import Json.Decode as JD
-import Json.Decode.Extra exposing (andMap)
 import Json.Encode
 import LngLat exposing (LngLat)
 import MapCommands
 import Mapbox.Cmd.Option as Opt
 import Mapbox.Element exposing (..)
-import Mapbox.Expression as E exposing (false, float, int, str, true)
+import Mapbox.Expression as E
 import Mapbox.Layer as Layer
 import Mapbox.Source as Source
 import Mapbox.Style as Style exposing (Style(..))
@@ -26,7 +24,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \m -> Sub.none
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -185,7 +183,7 @@ view model =
                 , eventFeaturesLayers <|
                     [ "locations" ]
                         ++ (case model.maybeDraggedFeature of
-                                Just feature ->
+                                Just _ ->
                                     [ "draggedFeatureLayer" ]
 
                                 Nothing ->
@@ -229,7 +227,7 @@ style storesJson maybeDraggedFeature =
     Style
         { transition = Style.defaultTransition
         , light = Style.defaultLight
-        , layers = Styles.Light.style.layers ++ [ locations maybeDraggedFeature, draggedFeatureLayer maybeDraggedFeature ]
+        , layers = Styles.Light.style.layers ++ [ locations maybeDraggedFeature, draggedFeatureLayer ]
         , sources =
             Styles.Light.style.sources
                 ++ [ Source.geoJSONFromValue "stores" [] storesJson
@@ -248,8 +246,8 @@ locations maybeDraggedFeature =
     Layer.symbol "locations"
         "stores"
     <|
-        [ Layer.iconImage (str "restaurant-15")
-        , Layer.iconAllowOverlap true
+        [ Layer.iconImage (E.str "restaurant-15")
+        , Layer.iconAllowOverlap E.true
 
         -- filter: "==", ["id"], "Hello-4"
         -- https://github.com/mapbox/mapbox-gl-js/issues/6552#issuecomment-383373365
@@ -263,13 +261,13 @@ locations maybeDraggedFeature =
                )
 
 
-draggedFeatureLayer maybeId =
+draggedFeatureLayer =
     Layer.symbol "draggedFeatureLayer"
         "draggedFeatureSource"
     <|
-        [ Layer.iconImage (str "restaurant-15")
-        , Layer.iconAllowOverlap true
-        , Layer.iconSize (float 2)
+        [ Layer.iconImage (E.str "restaurant-15")
+        , Layer.iconAllowOverlap E.true
+        , Layer.iconSize (E.float 2)
         ]
 
 

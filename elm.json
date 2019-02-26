@@ -12,8 +12,7 @@
             "elm/html": "1.0.0",
             "elm/json": "1.1.2",
             "elm-community/json-extra": "4.0.0",
-            "gampleman/elm-mapbox": "4.0.0",
-            "pilatch/flip": "1.0.0"
+            "gampleman/elm-mapbox": "4.0.0"
         },
         "indirect": {
             "elm/parser": "1.1.0",
